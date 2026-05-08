@@ -1,0 +1,1053 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>A Psique — Esquema Junguiano</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f4efe6;
+    --paper-2: #ede6d8;
+    --paper-3: #d7c9b7;
+    --ink: #5a1e10;
+    --ink-soft: #7d5d4e;
+    --ink-faint: rgba(90, 30, 16, 0.32);
+    --ink-veil: rgba(90, 30, 16, 0.14);
+    --paper-veil: rgba(244, 239, 230, 0.42);
+    --dot: rgba(90, 30, 16, 0.12);
+    --liquid: rgba(90, 30, 16, 0.42);
+    --liquid-2: rgba(90, 30, 16, 0.72);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    background-image:
+      radial-gradient(circle at 1px 1px, var(--dot) 1px, transparent 1px);
+    background-size: 18px 18px;
+    background-position: 0 0;
+    position: relative;
+    user-select: none;
+  }
+
+  .stage {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+  }
+
+  svg.canvas {
+    width: 100vw;
+    height: 100vh;
+    display: block;
+    cursor: default;
+    touch-action: none;
+  }
+
+  /* corner branding */
+  .meta {
+    position: fixed;
+    top: 28px;
+    left: 32px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    line-height: 1.7;
+    z-index: 10;
+  }
+  .meta .em { color: var(--ink); font-weight: 500; }
+  .meta hr {
+    border: 0;
+    border-top: 1px solid var(--ink-faint);
+    width: 32px;
+    margin: 10px 0;
+  }
+
+  .legend {
+    position: fixed;
+    bottom: 28px;
+    left: 32px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    line-height: 1.8;
+    z-index: 10;
+    max-width: 260px;
+  }
+  .legend .row { display: flex; gap: 10px; align-items: center; }
+  .legend .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ink); display: inline-block; flex: none; }
+  .legend .ring { width: 8px; height: 8px; border-radius: 50%; border: 1px solid var(--ink); display: inline-block; flex: none; }
+
+  .credit {
+    position: fixed;
+    bottom: 28px;
+    right: 32px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    z-index: 10;
+    text-align: right;
+    line-height: 1.8;
+  }
+  .credit a {
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 1px solid var(--ink-faint);
+    transition: color 160ms ease, border-color 160ms ease;
+  }
+  .credit a:hover {
+    color: var(--ink-soft);
+    border-color: var(--ink);
+  }
+
+  .title-block {
+    position: fixed;
+    top: 28px;
+    right: 32px;
+    text-align: right;
+    z-index: 10;
+  }
+  .title-block .kicker {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+  }
+  .title-block h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500;
+    font-style: italic;
+    font-size: 38px;
+    color: var(--ink);
+    letter-spacing: 0.01em;
+    line-height: 1;
+  }
+
+  /* SVG text styling */
+  .label-fn {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500;
+    font-size: 22px;
+    fill: var(--ink);
+  }
+  .label-fn.italic { font-style: italic; }
+  .label-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    fill: var(--ink-soft);
+  }
+  .label-axis {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    fill: var(--ink-soft);
+  }
+  .label-inside {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 20px;
+    fill: rgba(244, 239, 230, 0.92);
+    cursor: grab;
+    pointer-events: auto;
+    transition: fill 160ms ease;
+  }
+  .label-inside:hover,
+  .label-inside.grabbing { fill: var(--paper); }
+  .attitude-hit {
+    cursor: grab;
+    fill: transparent;
+    pointer-events: all;
+  }
+
+  .axis-line { stroke: var(--ink); stroke-width: 1; fill: none; opacity: 0.75; }
+  .axis-dash { stroke: var(--ink); stroke-width: 1; fill: none; stroke-dasharray: 14 10; opacity: 0.42; }
+
+  .arrow-line { stroke: var(--ink); stroke-width: 1.25; fill: none; pointer-events: none; opacity: 0.86; }
+  .arrow-head { fill: var(--ink); pointer-events: none; }
+
+  .handle {
+    fill: var(--paper);
+    stroke: var(--ink);
+    stroke-width: 1.6;
+    cursor: grab;
+    transition: r 160ms ease, fill 160ms ease;
+    filter: drop-shadow(0 0 6px var(--paper));
+  }
+  .handle-group:hover .handle,
+  .handle:hover { fill: var(--ink); }
+  .handle.grabbing { cursor: grabbing; fill: var(--ink); }
+  .handle-ring {
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 1;
+    opacity: 0;
+    transition: opacity 200ms ease;
+    pointer-events: none;
+  }
+  .handle-group:hover .handle-ring,
+  .handle-group.active .handle-ring { opacity: 0.4; }
+
+  .liquid-fill {
+    fill: url(#liquidGrad);
+    opacity: 0.86;
+  }
+  .sector-fill {
+    opacity: 0.94;
+  }
+  .liquid-shadow {
+    fill: none;
+    stroke: var(--liquid-2);
+    stroke-width: 0.6;
+    opacity: 0.5;
+  }
+
+  .center-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 17px;
+    font-style: italic;
+    fill: rgba(244, 239, 230, 0.95);
+    pointer-events: none;
+  }
+
+  .role-spoke {
+    stroke: var(--ink);
+    stroke-width: 1;
+    stroke-dasharray: 4 9;
+    opacity: 0.18;
+    pointer-events: none;
+  }
+  .role-handle {
+    fill: var(--paper-2);
+    stroke: var(--ink);
+    stroke-width: 1.2;
+    cursor: grab;
+    transition: fill 160ms ease, stroke-width 160ms ease;
+  }
+  .role-group:hover .role-handle,
+  .role-handle:hover,
+  .role-handle.grabbing {
+    fill: var(--ink);
+    stroke-width: 1.6;
+  }
+  .role-ring {
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 1;
+    opacity: 0;
+    transition: opacity 160ms ease;
+    pointer-events: none;
+  }
+  .role-group:hover .role-ring,
+  .role-group.active .role-ring { opacity: 0.28; }
+  .role-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    fill: var(--ink-soft);
+    pointer-events: none;
+  }
+
+  .reset-btn {
+    position: fixed;
+    top: 50%;
+    right: 32px;
+    transform: translateY(-50%);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    background: var(--paper);
+    border: 1px solid var(--ink-faint);
+    padding: 9px 14px;
+    cursor: pointer;
+    z-index: 10;
+    transition: all 160ms ease;
+    writing-mode: horizontal-tb;
+  }
+  .reset-btn:hover {
+    color: var(--paper);
+    background: var(--ink);
+    border-color: var(--ink);
+  }
+</style>
+</head>
+<body>
+
+<div class="meta">
+  <div class="em">Fig. I</div>
+  <hr>
+  <div>Modelo da<br>Psique · C.G. Jung</div>
+</div>
+
+<div class="title-block">
+  <div class="kicker">Esquema Interativo</div>
+  <h1>A Psique</h1>
+</div>
+
+<button class="reset-btn" id="resetBtn">↺ Restaurar</button>
+
+<div class="legend">
+  <div class="row"><span class="dot" style="background:#5a1e10"></span><span>sentimento · água</span></div>
+  <div class="row"><span class="dot" style="background:#8a5745"></span><span>sensação · terra</span></div>
+  <div class="row"><span class="dot" style="background:#c09b72"></span><span>pensamento · ar</span></div>
+  <div class="row"><span class="dot" style="background:#eadfce; border:1px solid rgba(90,30,16,0.32)"></span><span>intuição · fogo</span></div>
+</div>
+
+<div class="credit">
+  São Paulo · MMXXVI<br>
+  Estudo nº 04<br>
+  &copy; Brunno Rossetti Ogibowski · <a href="https://instagram.com/obrunnorossetti" target="_blank" rel="noopener noreferrer">@obrunnorossetti</a>
+</div>
+
+<div class="stage">
+  <svg class="canvas" id="canvas" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid meet">
+    <defs>
+      <!-- gooey filter to fuse handles into the blob -->
+      <filter id="goo" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="9" result="blur"/>
+        <feColorMatrix in="blur" mode="matrix"
+          values="1 0 0 0 0
+                  0 1 0 0 0
+                  0 0 1 0 0
+                  0 0 0 22 -10" result="goo"/>
+        <feComposite in="SourceGraphic" in2="goo" operator="atop"/>
+      </filter>
+
+      <filter id="paperGrain" x="0" y="0" width="100%" height="100%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="3"/>
+        <feColorMatrix values="0 0 0 0 0.35
+                               0 0 0 0 0.12
+                               0 0 0 0 0.06
+                               0 0 0 0.06 0"/>
+        <feComposite in2="SourceGraphic" operator="in"/>
+      </filter>
+
+      <radialGradient id="liquidGrad" cx="0.4" cy="0.35" r="0.8">
+        <stop offset="0%" stop-color="#d7c9b7"/>
+        <stop offset="48%" stop-color="#9d806f"/>
+        <stop offset="100%" stop-color="#5a1e10"/>
+      </radialGradient>
+
+      <filter id="innerBlur" x="-18%" y="-18%" width="136%" height="136%">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="1.8"/>
+      </filter>
+
+      <marker id="arr" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="11" markerHeight="11" orient="auto-start-reverse">
+        <path d="M1 1 L11 6 L1 11 Z" fill="var(--ink)"/>
+      </marker>
+    </defs>
+
+    <!-- Horizontal axis: consciência ↔ inconsciente, dashed outside the circle area -->
+    <g id="axisGroup"></g>
+
+    <!-- Liquid blob (with gooey fusion) -->
+    <defs>
+      <clipPath id="blobClip">
+        <path id="blobClipPath" d=""></path>
+      </clipPath>
+    </defs>
+    <g filter="url(#goo)">
+      <path id="blob" class="liquid-fill" d="" fill="url(#liquidGrad)" filter="url(#innerBlur)"></path>
+      <!-- micro-blobs that fuse with main blob through gooey filter, give a "pull" -->
+      <g id="microBlobs"></g>
+    </g>
+
+    <!-- colored sectors: each function paints its share of the blob -->
+    <g id="sectors" clip-path="url(#blobClip)" style="mix-blend-mode: normal;"></g>
+
+    <!-- subtle inner highlight (no filter) -->
+    <path id="blobHighlight" d="" fill="none" stroke="rgba(255,220,200,0.18)" stroke-width="1" pointer-events="none"></path>
+
+    <!-- inside labels: introversão / extroversão -->
+    <text id="lblIntro" class="label-inside" text-anchor="middle" data-attitude-idx="0">introversão</text>
+    <text id="lblExtro" class="label-inside" text-anchor="middle" data-attitude-idx="1">extroversão</text>
+
+    <!-- arrows + labels (drawn dynamically) -->
+    <g id="arrowsGroup"></g>
+
+    <!-- position labels: superior / inferior / auxiliar / terciária -->
+    <g id="rolesGroup"></g>
+
+  </svg>
+</div>
+
+<script>
+//------------------------------------------------------------
+// Geometry
+//------------------------------------------------------------
+const SVG = document.getElementById('canvas');
+const VB = { w: 1600, h: 1000 };
+const CENTER = { x: 800, y: 500 };
+const RADIUS = 175;
+const FUNCTION_TONES = [
+  '#5a1e10',
+  '#8a5745',
+  '#c09b72',
+  '#eadfce',
+];
+
+// Four functions, by angle (radians). 0 = right (east).
+// Sketch maps:
+//   top (north)        → sentimento (superior)
+//   top-right (NE-ish) → sensação (auxiliar)
+//   bottom (south)     → pensamento (inferior)
+//   bottom-left (SW)   → intuição (terciária)
+const FUNCTIONS = [
+  { id: 'sentimento', label: 'sentimento',  angle: -Math.PI / 2,                      side: 'top',    pair: 2, color: FUNCTION_TONES[0], element: 'água',  axis: 'primary' },
+  { id: 'sensacao',   label: 'sensação',    angle: -Math.PI / 2 + Math.PI * 0.28,     side: 'right',  pair: 3, color: FUNCTION_TONES[1], element: 'terra', axis: 'secondary' },
+  { id: 'pensamento', label: 'pensamento',  angle:  Math.PI / 2,                      side: 'bottom', pair: 0, color: FUNCTION_TONES[2], element: 'ar',    axis: 'primary' },
+  { id: 'intuicao',   label: 'intuição',    angle:  Math.PI / 2 + Math.PI * 0.28,     side: 'left',   pair: 1, color: FUNCTION_TONES[3], element: 'fogo',  axis: 'secondary' },
+];
+
+const ROLE_PRIMARY_REST = RADIUS + 104;
+const ROLE_SECONDARY_REST = RADIUS + 58;
+const ROLE_POSITIONS = [
+  { id: 'superior',  label: 'superior',  angle: -Math.PI / 2,                  pair: 1, radius: ROLE_PRIMARY_REST },
+  { id: 'inferior',  label: 'inferior',  angle:  Math.PI / 2,                  pair: 0, radius: ROLE_PRIMARY_REST },
+  { id: 'auxiliar',  label: 'auxiliar',  angle: -Math.PI / 2 + Math.PI * 0.28, pair: 3, radius: ROLE_SECONDARY_REST },
+  { id: 'terciaria', label: 'terciária', angle:  Math.PI / 2 + Math.PI * 0.28, pair: 2, radius: ROLE_SECONDARY_REST },
+];
+
+const ATTITUDE_POSITIONS = [
+  { id: 'introversao', labelId: 'lblIntro', angle: -Math.PI / 2, pair: 1 },
+  { id: 'extroversao', labelId: 'lblExtro', angle:  Math.PI / 2, pair: 0 },
+];
+
+// arrow tip distance from center (rest)
+const TIP_REST = 340;
+// label distance from tip
+const LABEL_OFFSET = 70;
+const OUTER_POINT_MAX = Math.min(
+  CENTER.x - 46 - LABEL_OFFSET,
+  VB.w - CENTER.x - 46 - LABEL_OFFSET,
+  CENTER.y - 46 - LABEL_OFFSET,
+  VB.h - CENTER.y - 46 - LABEL_OFFSET
+);
+const FUNCTION_PRIMARY_REST = TIP_REST;
+const FUNCTION_SECONDARY_REST = ROLE_SECONDARY_REST + 58;
+const FUNCTION_PRIMARY_MAX = OUTER_POINT_MAX;
+const FUNCTION_SECONDARY_MAX = ROLE_SECONDARY_REST + 90;
+
+//------------------------------------------------------------
+// State per handle: each can be dragged.
+// dx, dy = current displacement of tip from rest position.
+// vx, vy = velocity for spring sim.
+//------------------------------------------------------------
+const handles = FUNCTIONS.map((f, i) => {
+  const restRadius = f.axis === 'secondary' ? FUNCTION_SECONDARY_REST : FUNCTION_PRIMARY_REST;
+  const rx = CENTER.x + Math.cos(f.angle) * restRadius;
+  const ry = CENTER.y + Math.sin(f.angle) * restRadius;
+  return {
+    ...f, idx: i,
+    restX: rx, restY: ry,
+    restRadius,
+    x: rx, y: ry,
+    vx: 0, vy: 0,
+    dragging: false,
+  };
+});
+
+const roles = ROLE_POSITIONS.map((r, i) => {
+  const rx = CENTER.x + Math.cos(r.angle) * r.radius;
+  const ry = CENTER.y + Math.sin(r.angle) * r.radius;
+  return {
+    ...r, idx: i,
+    restX: rx, restY: ry,
+    x: rx, y: ry,
+    dragging: false,
+  };
+});
+
+const ATTITUDE_REST = 46;
+const attitudes = ATTITUDE_POSITIONS.map((a, i) => {
+  const rx = CENTER.x + Math.cos(a.angle) * ATTITUDE_REST;
+  const ry = CENTER.y + Math.sin(a.angle) * ATTITUDE_REST;
+  return {
+    ...a, idx: i,
+    restX: rx, restY: ry,
+    x: rx, y: ry,
+    vx: 0, vy: 0,
+    dragging: false,
+  };
+});
+
+//------------------------------------------------------------
+// Build static / dynamic SVG nodes
+//------------------------------------------------------------
+const axisGroup   = document.getElementById('axisGroup');
+const arrowsGroup = document.getElementById('arrowsGroup');
+const microGroup  = document.getElementById('microBlobs');
+const rolesGroup  = document.getElementById('rolesGroup');
+
+// Horizontal "consciência / inconsciente" axis (dashed outside circle, solid through it)
+function buildAxis() {
+  // dashed left part (consciência side)
+  const dashL = el('line', {
+    class: 'axis-dash',
+    x1: 80,           y1: CENTER.y,
+    x2: CENTER.x - RADIUS - 6, y2: CENTER.y,
+  });
+  const dashR = el('line', {
+    class: 'axis-dash',
+    x1: CENTER.x + RADIUS + 6, y1: CENTER.y,
+    x2: VB.w - 80,             y2: CENTER.y,
+  });
+  // labels
+  const lblCon = el('text', {
+    class: 'label-axis',
+    x: 100, y: CENTER.y - 18,
+  }, 'consciência');
+  const lblInc = el('text', {
+    class: 'label-axis',
+    x: 100, y: CENTER.y + 28,
+  }, 'inconsciente');
+  // small markers at far ends
+  const tickL = el('line', { class: 'axis-line', x1: 80, y1: CENTER.y - 8, x2: 80, y2: CENTER.y + 8 });
+  const tickR = el('line', { class: 'axis-line', x1: VB.w - 80, y1: CENTER.y - 8, x2: VB.w - 80, y2: CENTER.y + 8 });
+
+  axisGroup.append(dashL, dashR, lblCon, lblInc, tickL, tickR);
+}
+buildAxis();
+
+// Build arrows + handles + labels for each function
+handles.forEach((h, i) => {
+  const g = el('g', { class: 'handle-group', 'data-idx': i });
+
+  // line from edge of circle to tip (will be updated each frame)
+  const line = el('line', { class: 'arrow-line', 'marker-end': 'url(#arr)' });
+  g.appendChild(line);
+  h._line = line;
+
+  // labels (fixed position, computed once near rest tip)
+  const lx = h.restX + Math.cos(h.angle) * LABEL_OFFSET;
+  const ly = h.restY + Math.sin(h.angle) * LABEL_OFFSET;
+  const anchor = (h.side === 'left') ? 'end' : (h.side === 'right' ? 'start' : 'middle');
+
+  const lblMain = el('text', { class: 'label-fn italic', x: lx, y: ly, 'text-anchor': anchor, fill: h.color }, h.label);
+  const lblSub  = el('text', { class: 'label-sub',         x: lx, y: ly + 24, 'text-anchor': anchor, fill: h.color, opacity: 0.88 }, '· ' + h.element + ' ·');
+  g.appendChild(lblMain);
+  g.appendChild(lblSub);
+  h._lblMain = lblMain;
+  h._lblSub = lblSub;
+  h._labelRestX = lx;
+  h._labelRestY = ly;
+  h._labelAnchor = anchor;
+
+  // hover ring
+  const ring = el('circle', { class: 'handle-ring', cx: h.x, cy: h.y, r: 22 });
+  g.appendChild(ring);
+  h._ring = ring;
+
+  // draggable handle (dot)
+  const dot = el('circle', { class: 'handle', cx: h.x, cy: h.y, r: 8, 'data-idx': i });
+  g.appendChild(dot);
+  h._dot = dot;
+
+  // hidden expanded hit-target for easier grabbing
+  const hit = el('circle', { cx: h.x, cy: h.y, r: 28, fill: 'transparent', cursor: 'grab', 'data-idx': i });
+  g.appendChild(hit);
+  h._hit = hit;
+
+  arrowsGroup.appendChild(g);
+
+  // micro-blob that follows the handle, fused into main blob via gooey filter
+  const mb = el('circle', { cx: h.x, cy: h.y, r: 0, fill: h.color });
+  microGroup.appendChild(mb);
+  h._micro = mb;
+
+  // colored sector path (clipped to blob)
+  const sect = el('path', { class: 'sector-fill', d: '', fill: h.color });
+  document.getElementById('sectors').appendChild(sect);
+  h._sector = sect;
+
+  // colorize the dot stroke a bit so it reads as that function
+  h._dot.setAttribute('stroke', h.color);
+});
+
+roles.forEach((r, i) => {
+  const g = el('g', { class: 'role-group', 'data-role-idx': i });
+
+  const spoke = el('line', { class: 'role-spoke' });
+  g.appendChild(spoke);
+  r._spoke = spoke;
+
+  const ring = el('circle', { class: 'role-ring', cx: r.x, cy: r.y, r: 17 });
+  g.appendChild(ring);
+  r._ring = ring;
+
+  const dot = el('circle', { class: 'role-handle', cx: r.x, cy: r.y, r: 5.5, 'data-role-idx': i });
+  g.appendChild(dot);
+  r._dot = dot;
+
+  const label = el('text', { class: 'role-label', x: r.x, y: r.y, 'text-anchor': 'middle' }, r.label);
+  g.appendChild(label);
+  r._label = label;
+
+  const hit = el('circle', { cx: r.x, cy: r.y, r: 23, fill: 'transparent', cursor: 'grab', 'data-role-idx': i });
+  g.appendChild(hit);
+  r._hit = hit;
+
+  rolesGroup.appendChild(g);
+});
+
+attitudes.forEach((a, i) => {
+  const label = document.getElementById(a.labelId);
+  label.setAttribute('data-attitude-idx', i);
+  a._label = label;
+
+  const hit = el('circle', { class: 'attitude-hit', cx: a.x, cy: a.y, r: 32, 'data-attitude-idx': i });
+  label.parentNode.insertBefore(hit, label);
+  a._hit = hit;
+});
+
+//------------------------------------------------------------
+// Helpers
+//------------------------------------------------------------
+function el(tag, attrs = {}, text) {
+  const n = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  for (const k in attrs) n.setAttribute(k, attrs[k]);
+  if (text != null) n.textContent = text;
+  return n;
+}
+
+function clientToSvg(cx, cy) {
+  const r = SVG.getBoundingClientRect();
+  const x = (cx - r.left) / r.width  * VB.w;
+  const y = (cy - r.top)  / r.height * VB.h;
+  return { x, y };
+}
+
+function angleDelta(a, b) {
+  let d = a - b;
+  while (d >  Math.PI) d -= Math.PI * 2;
+  while (d < -Math.PI) d += Math.PI * 2;
+  return d;
+}
+
+function axisAngleDistance(angle, axisAngle) {
+  const d = Math.abs(angleDelta(angle, axisAngle));
+  return Math.min(d, Math.abs(Math.PI - d));
+}
+
+function functionMaxForAngle(angle) {
+  const primaryAxis = Math.atan2(roles[0].y - CENTER.y, roles[0].x - CENTER.x);
+  const secondaryAxis = Math.atan2(roles[2].y - CENTER.y, roles[2].x - CENTER.x);
+  const nearPrimary = axisAngleDistance(angle, primaryAxis) <= axisAngleDistance(angle, secondaryAxis);
+  return nearPrimary ? FUNCTION_PRIMARY_MAX : FUNCTION_SECONDARY_MAX;
+}
+
+function maxDistanceInsideViewport(angle, pad) {
+  const c = Math.cos(angle);
+  const s = Math.sin(angle);
+  const limits = [];
+
+  if (c > 0.001) limits.push((VB.w - pad - CENTER.x) / c);
+  if (c < -0.001) limits.push((pad - CENTER.x) / c);
+  if (s > 0.001) limits.push((VB.h - pad - CENTER.y) / s);
+  if (s < -0.001) limits.push((pad - CENTER.y) / s);
+
+  return Math.min(...limits.filter(Number.isFinite));
+}
+
+function clampAroundCenter(x, y, minD, maxD, outerOffset = 0, pad = 34) {
+  const dx = x - CENTER.x;
+  const dy = y - CENTER.y;
+  const dist = Math.hypot(dx, dy) || minD;
+  const angle = Math.atan2(dy, dx);
+  const viewportMax = maxDistanceInsideViewport(angle, pad) - outerOffset;
+  const effectiveMax = Math.max(minD, Math.min(maxD, viewportMax));
+  const clamped = Math.max(minD, Math.min(effectiveMax, dist));
+  return {
+    x: CENTER.x + Math.cos(angle) * clamped,
+    y: CENTER.y + Math.sin(angle) * clamped,
+  };
+}
+
+function moveOpposedPair(source, target, desiredX, desiredY, minD, maxD, outerOffset = 0, pad = 34) {
+  const p = clampAroundCenter(desiredX, desiredY, minD, maxD, outerOffset, pad);
+  source.x = p.x;
+  source.y = p.y;
+  source.vx = 0;
+  source.vy = 0;
+
+  target.x = CENTER.x - (p.x - CENTER.x);
+  target.y = CENTER.y - (p.y - CENTER.y);
+  target.vx = 0;
+  target.vy = 0;
+}
+
+//------------------------------------------------------------
+// Drag interaction
+//------------------------------------------------------------
+let activeKind = '';
+let activeIdx = -1;
+let pointerOffset = { x: 0, y: 0 };
+
+function onPointerDown(e) {
+  const target = e.target;
+  const attitudeIdx = target.getAttribute && target.getAttribute('data-attitude-idx');
+  const roleIdx = target.getAttribute && target.getAttribute('data-role-idx');
+  const fnIdx = target.getAttribute && target.getAttribute('data-idx');
+
+  if (attitudeIdx != null) {
+    activeKind = 'attitude';
+    activeIdx = +attitudeIdx;
+  } else if (roleIdx != null) {
+    activeKind = 'role';
+    activeIdx = +roleIdx;
+  } else if (fnIdx != null) {
+    activeKind = 'function';
+    activeIdx = +fnIdx;
+  } else {
+    return;
+  }
+
+  const h = activeKind === 'attitude' ? attitudes[activeIdx] : (activeKind === 'role' ? roles[activeIdx] : handles[activeIdx]);
+  h.dragging = true;
+  if (activeKind === 'attitude') {
+    h._label.classList.add('grabbing');
+  } else {
+    h._dot.classList.add('grabbing');
+    h._dot.parentElement.classList.add('active');
+  }
+  const p = clientToSvg(e.clientX, e.clientY);
+  pointerOffset.x = p.x - h.x;
+  pointerOffset.y = p.y - h.y;
+  e.preventDefault();
+  SVG.setPointerCapture && SVG.setPointerCapture(e.pointerId);
+}
+
+function onPointerMove(e) {
+  if (activeIdx < 0) return;
+  const collection = activeKind === 'attitude' ? attitudes : (activeKind === 'role' ? roles : handles);
+  const h = collection[activeIdx];
+  const p = clientToSvg(e.clientX, e.clientY);
+  let nx = p.x - pointerOffset.x;
+  let ny = p.y - pointerOffset.y;
+
+  const dragAngle = Math.atan2(ny - CENTER.y, nx - CENTER.x);
+  const minD = activeKind === 'attitude' ? 20 : (activeKind === 'role' ? h.radius : RADIUS + 30);
+  const maxD = activeKind === 'attitude'
+    ? RADIUS - 52
+    : (activeKind === 'role' ? h.radius : functionMaxForAngle(dragAngle));
+  const outerOffset = activeKind === 'function' ? LABEL_OFFSET : (activeKind === 'role' ? 34 : 0);
+  const viewportPad = activeKind === 'function' ? 46 : 32;
+  const opp = collection[h.pair];
+
+  // Paired points stay in exact opposition through the center. Moving one
+  // endpoint to the upper-left sends the other to the lower-right, and so on.
+  if (opp) {
+    moveOpposedPair(h, opp, nx, ny, minD, maxD, outerOffset, viewportPad);
+  }
+}
+
+function onPointerUp() {
+  if (activeIdx < 0) return;
+  const h = activeKind === 'attitude' ? attitudes[activeIdx] : (activeKind === 'role' ? roles[activeIdx] : handles[activeIdx]);
+  h.dragging = false;
+  if (activeKind === 'attitude') {
+    h._label.classList.remove('grabbing');
+  } else {
+    h._dot.classList.remove('grabbing');
+    h._dot.parentElement.classList.remove('active');
+  }
+  activeIdx = -1;
+  activeKind = '';
+  // kick the returning spring loop in case any handles are mid-return
+  requestAnimationFrame(returnTick);
+}
+
+SVG.addEventListener('pointerdown', onPointerDown);
+window.addEventListener('pointermove', onPointerMove);
+window.addEventListener('pointerup', onPointerUp);
+window.addEventListener('pointercancel', onPointerUp);
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  handles.forEach(h => { h._returning = true; });
+  roles.forEach(r => { r._returning = true; });
+  attitudes.forEach(a => { a._returning = true; });
+  requestAnimationFrame(returnTick);
+});
+
+// run a small returning-spring tick when reset is pressed
+function returnTick() {
+  let stillReturning = false;
+  for (const h of [...handles, ...roles, ...attitudes]) {
+    if (!h._returning || h.dragging) continue;
+    const dx = h.restX - h.x;
+    const dy = h.restY - h.y;
+    if (Math.hypot(dx, dy) < 0.5) {
+      h.x = h.restX; h.y = h.restY;
+      h.vx = 0; h.vy = 0;
+      h._returning = false;
+      continue;
+    }
+    stillReturning = true;
+    h.x += dx * 0.18;
+    h.y += dy * 0.18;
+  }
+  if (stillReturning) requestAnimationFrame(returnTick);
+}
+
+//------------------------------------------------------------
+// Liquid blob: parametric polar curve with per-handle pull
+//------------------------------------------------------------
+const SAMPLES = 96;
+const blob = document.getElementById('blob');
+const blobHL = document.getElementById('blobHighlight');
+
+let t0 = performance.now();
+
+function radiusAt(theta, time) {
+  // base ambient breathing — multiple low-freq sines for organic feel
+  const breath =
+      Math.sin(theta * 3 + time * 0.0006) * 4 +
+      Math.sin(theta * 5 - time * 0.0009) * 2.5 +
+      Math.sin(theta * 2 + time * 0.0011) * 3;
+
+  let r = RADIUS + breath;
+
+  // pull from each handle: gaussian centered on its current angle
+  for (const h of handles) {
+    const ang = Math.atan2(h.y - CENTER.y, h.x - CENTER.x);
+    let d = theta - ang;
+    while (d >  Math.PI) d -= 2 * Math.PI;
+    while (d < -Math.PI) d += 2 * Math.PI;
+
+    const dist = Math.hypot(h.x - CENTER.x, h.y - CENTER.y);
+    // pull is zero when handle is at rest; only deform when dragged beyond
+    const pull = Math.max(0, dist - h.restRadius);
+    if (pull < 0.5) continue;
+    // sigma narrows as you pull harder → sharper "spike"
+    const sigma = 0.55 - Math.min(0.35, pull * 0.0012);
+    const falloff = Math.exp(-(d * d) / (2 * sigma * sigma));
+    // amplitude: mostly the pull, capped
+    const amp = pull * 0.95;
+    r += amp * falloff;
+  }
+
+  return r;
+}
+
+function buildBlobPath(time) {
+  // sample radii
+  const pts = [];
+  for (let i = 0; i < SAMPLES; i++) {
+    const theta = (i / SAMPLES) * Math.PI * 2 - Math.PI / 2; // start at top
+    const r = radiusAt(theta, time);
+    pts.push({
+      x: CENTER.x + Math.cos(theta) * r,
+      y: CENTER.y + Math.sin(theta) * r,
+    });
+  }
+  // closed Catmull-Rom → Bezier for smoothness
+  let d = `M ${pts[0].x.toFixed(2)} ${pts[0].y.toFixed(2)}`;
+  const n = pts.length;
+  for (let i = 0; i < n; i++) {
+    const p0 = pts[(i - 1 + n) % n];
+    const p1 = pts[i];
+    const p2 = pts[(i + 1) % n];
+    const p3 = pts[(i + 2) % n];
+    const c1x = p1.x + (p2.x - p0.x) / 6;
+    const c1y = p1.y + (p2.y - p0.y) / 6;
+    const c2x = p2.x - (p3.x - p1.x) / 6;
+    const c2y = p2.y - (p3.y - p1.y) / 6;
+    d += ` C ${c1x.toFixed(2)} ${c1y.toFixed(2)}, ${c2x.toFixed(2)} ${c2y.toFixed(2)}, ${p2.x.toFixed(2)} ${p2.y.toFixed(2)}`;
+  }
+  d += ' Z';
+  return d;
+}
+
+//------------------------------------------------------------
+// Animation loop: spring physics for handles, redraw blob
+//------------------------------------------------------------
+function tick() {
+  const now = performance.now();
+  const time = now - t0;
+
+  // physics
+  for (const h of handles) {
+    if (!h.dragging) {
+      // gentle damping of any residual velocity, but no spring back —
+      // handles stay where the user leaves them.
+      h.vx *= 0.9;
+      h.vy *= 0.9;
+      h.x += h.vx;
+      h.y += h.vy;
+      if (Math.abs(h.vx) < 0.02) h.vx = 0;
+      if (Math.abs(h.vy) < 0.02) h.vy = 0;
+    }
+  }
+
+  // update arrows + handles in DOM
+  for (const h of handles) {
+    const ang = Math.atan2(h.y - CENTER.y, h.x - CENTER.x);
+    // line starts at edge of (current) blob radius along this angle, ends at handle
+    const startR = RADIUS - 6;
+    const sx = CENTER.x + Math.cos(ang) * startR;
+    const sy = CENTER.y + Math.sin(ang) * startR;
+    h._line.setAttribute('x1', sx.toFixed(1));
+    h._line.setAttribute('y1', sy.toFixed(1));
+    h._line.setAttribute('x2', h.x.toFixed(1));
+    h._line.setAttribute('y2', h.y.toFixed(1));
+
+    h._dot.setAttribute('cx', h.x.toFixed(1));
+    h._dot.setAttribute('cy', h.y.toFixed(1));
+    h._hit.setAttribute('cx', h.x.toFixed(1));
+    h._hit.setAttribute('cy', h.y.toFixed(1));
+    h._ring.setAttribute('cx', h.x.toFixed(1));
+    h._ring.setAttribute('cy', h.y.toFixed(1));
+
+    // labels follow handle: stay at fixed offset from tip
+    const lx = h.x + Math.cos(ang) * LABEL_OFFSET;
+    const ly = h.y + Math.sin(ang) * LABEL_OFFSET;
+    const labelAnchor = Math.cos(ang) < -0.24 ? 'end' : (Math.cos(ang) > 0.24 ? 'start' : 'middle');
+    h._lblMain.setAttribute('text-anchor', labelAnchor);
+    h._lblSub.setAttribute('text-anchor', labelAnchor);
+    h._lblMain.setAttribute('x', lx.toFixed(1));
+    h._lblMain.setAttribute('y', ly.toFixed(1));
+    h._lblSub.setAttribute('x', lx.toFixed(1));
+    h._lblSub.setAttribute('y', (ly + 24).toFixed(1));
+
+    // micro-blob position follows the tip a bit, helps gooey "stretch" feel
+    const dist = Math.hypot(h.x - CENTER.x, h.y - CENTER.y);
+    const pull = Math.max(0, dist - h.restRadius);
+    // micro-blob sits between blob edge and tip, scaled by pull. Hidden at rest.
+    if (pull > 0.5) {
+      const mbDist = Math.min(dist - 14, RADIUS + pull * 0.6);
+      const mbx = CENTER.x + Math.cos(ang) * mbDist;
+      const mby = CENTER.y + Math.sin(ang) * mbDist;
+      const mbr = Math.min(26, 6 + pull * 0.2);
+      h._micro.setAttribute('cx', mbx.toFixed(1));
+      h._micro.setAttribute('cy', mby.toFixed(1));
+      h._micro.setAttribute('r', mbr.toFixed(1));
+    } else {
+      h._micro.setAttribute('r', 0);
+    }
+  }
+
+  for (const r of roles) {
+    const ang = Math.atan2(r.y - CENTER.y, r.x - CENTER.x);
+    const spokeStart = RADIUS + 8;
+    r._spoke.setAttribute('x1', (CENTER.x + Math.cos(ang) * spokeStart).toFixed(1));
+    r._spoke.setAttribute('y1', (CENTER.y + Math.sin(ang) * spokeStart).toFixed(1));
+    r._spoke.setAttribute('x2', r.x.toFixed(1));
+    r._spoke.setAttribute('y2', r.y.toFixed(1));
+
+    r._dot.setAttribute('cx', r.x.toFixed(1));
+    r._dot.setAttribute('cy', r.y.toFixed(1));
+    r._hit.setAttribute('cx', r.x.toFixed(1));
+    r._hit.setAttribute('cy', r.y.toFixed(1));
+    r._ring.setAttribute('cx', r.x.toFixed(1));
+    r._ring.setAttribute('cy', r.y.toFixed(1));
+
+    const labelDist = 26;
+    const lx = r.x + Math.cos(ang) * labelDist;
+    const ly = r.y + Math.sin(ang) * labelDist + 3;
+    const anchor = Math.cos(ang) < -0.32 ? 'end' : (Math.cos(ang) > 0.32 ? 'start' : 'middle');
+    r._label.setAttribute('x', lx.toFixed(1));
+    r._label.setAttribute('y', ly.toFixed(1));
+    r._label.setAttribute('text-anchor', anchor);
+  }
+
+  const d = buildBlobPath(time);
+  blob.setAttribute('d', d);
+  blobHL.setAttribute('d', d);
+  document.getElementById('blobClipPath').setAttribute('d', d);
+
+  // ---- Colored sectors ----
+  // Each function gets an angular slice of the blob.
+  // The slice angular WIDTH grows with that function's "development" (its pull beyond rest).
+  // Default: at rest all four are equal (90° each).
+  // As one is pulled out, its slice grows; opposite is fixed (paired). Neighbors shrink.
+  {
+    // 1. compute development per function (pull beyond rest, normalized)
+    const devs = handles.map(h => {
+      const dist = Math.hypot(h.x - CENTER.x, h.y - CENTER.y);
+      return Math.max(0, dist - h.restRadius);
+    });
+    const maxDev = 200; // px — beyond this, fully developed
+    const devNorm = devs.map(d => Math.min(1, d / maxDev));
+
+    // 2. each sector base = 0.25 (quarter), bonus = devNorm * 0.18, total renormalized
+    const weights = devNorm.map(d => 0.25 + d * 0.22);
+    const sumW = weights.reduce((a, b) => a + b, 0);
+    const fracs = weights.map(w => w / sumW);
+
+    // 3. lay out wedges centered on each function's angle
+    // sort by angle so the slices tile around the circle
+    const order = handles.map((h, i) => ({
+      i,
+      ang: Math.atan2(h.y - CENTER.y, h.x - CENTER.x),
+    })).sort((a, b) => a.ang - b.ang);
+
+    // give each its share of 2π
+    const fullR = 600; // overdraw far beyond blob; clip handles trimming
+    let cursor = order[0].ang - fracs[order[0].i] * Math.PI; // start so first wedge is centered on its angle
+    for (const o of order) {
+      const f = fracs[o.i] * Math.PI * 2;
+      const a0 = cursor;
+      const a1 = cursor + f;
+      cursor = a1;
+
+      // build wedge path
+      const x0 = CENTER.x + Math.cos(a0) * fullR;
+      const y0 = CENTER.y + Math.sin(a0) * fullR;
+      const x1 = CENTER.x + Math.cos(a1) * fullR;
+      const y1 = CENTER.y + Math.sin(a1) * fullR;
+      const large = (a1 - a0) > Math.PI ? 1 : 0;
+      const wedgeD = `M ${CENTER.x} ${CENTER.y} L ${x0.toFixed(1)} ${y0.toFixed(1)} A ${fullR} ${fullR} 0 ${large} 1 ${x1.toFixed(1)} ${y1.toFixed(1)} Z`;
+      handles[o.i]._sector.setAttribute('d', wedgeD);
+    }
+  }
+
+  for (const a of attitudes) {
+    a._label.setAttribute('x', a.x.toFixed(1));
+    a._label.setAttribute('y', a.y.toFixed(1));
+    a._hit.setAttribute('cx', a.x.toFixed(1));
+    a._hit.setAttribute('cy', a.y.toFixed(1));
+  }
+
+  requestAnimationFrame(tick);
+}
+tick();
+
+//------------------------------------------------------------
+// Tiny helper: keyboard reset
+//------------------------------------------------------------
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'r' || e.key === 'R' || e.key === 'Escape') {
+    document.getElementById('resetBtn').click();
+  }
+});
+</script>
+
+</body>
+</html>
