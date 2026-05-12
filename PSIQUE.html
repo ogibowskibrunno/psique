@@ -405,7 +405,8 @@
 const SVG = document.getElementById('canvas');
 const VB = { w: 1600, h: 1000 };
 const CENTER = { x: 800, y: 500 };
-const RADIUS = 175;
+const CONTROL_RADIUS = 175;
+const RADIUS = CONTROL_RADIUS * 0.8;
 const FUNCTION_TONES = [
   '#5a1e10',
   '#8a5745',
@@ -426,8 +427,8 @@ const FUNCTIONS = [
   { id: 'intuicao',   label: 'intuição',    angle:  Math.PI / 2 + Math.PI * 0.28,     side: 'left',   pair: 1, color: FUNCTION_TONES[3], element: 'fogo',  axis: 'secondary' },
 ];
 
-const ROLE_PRIMARY_REST = RADIUS + 104;
-const ROLE_SECONDARY_REST = RADIUS + 58;
+const ROLE_PRIMARY_REST = CONTROL_RADIUS + 104;
+const ROLE_SECONDARY_REST = CONTROL_RADIUS + 58;
 const ROLE_POSITIONS = [
   { id: 'superior',  label: 'superior',  angle: -Math.PI / 2,                  pair: 1, radius: ROLE_PRIMARY_REST },
   { id: 'inferior',  label: 'inferior',  angle:  Math.PI / 2,                  pair: 0, radius: ROLE_PRIMARY_REST },
@@ -753,7 +754,7 @@ function onPointerMove(e) {
   let ny = p.y - pointerOffset.y;
 
   const dragAngle = Math.atan2(ny - CENTER.y, nx - CENTER.x);
-  const minD = activeKind === 'attitude' ? 20 : (activeKind === 'role' ? h.radius : RADIUS + 30);
+  const minD = activeKind === 'attitude' ? 20 : (activeKind === 'role' ? h.radius : CONTROL_RADIUS + 30);
   const maxD = activeKind === 'attitude'
     ? RADIUS - 52
     : (activeKind === 'role' ? h.radius : functionMaxForAngle(dragAngle));
