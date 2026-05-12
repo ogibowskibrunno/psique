@@ -270,7 +270,17 @@
     letter-spacing: 0.18em;
     text-transform: uppercase;
     fill: var(--ink-soft);
-    pointer-events: none;
+    cursor: grab;
+    pointer-events: auto;
+  }
+  .role-label:hover,
+  .role-label.grabbing {
+    fill: var(--ink);
+  }
+  .role-hit {
+    fill: transparent;
+    cursor: grab;
+    pointer-events: all;
   }
 
   .reset-btn {
@@ -607,11 +617,11 @@ roles.forEach((r, i) => {
   g.appendChild(dot);
   r._dot = dot;
 
-  const label = el('text', { class: 'role-label', x: r.x, y: r.y, 'text-anchor': 'middle' }, r.label);
+  const label = el('text', { class: 'role-label', x: r.x, y: r.y, 'text-anchor': 'middle', 'data-role-idx': i }, r.label);
   g.appendChild(label);
   r._label = label;
 
-  const hit = el('circle', { cx: r.x, cy: r.y, r: 23, fill: 'transparent', cursor: 'grab', 'data-role-idx': i });
+  const hit = el('circle', { class: 'role-hit', cx: r.x, cy: r.y, r: 34, 'data-role-idx': i });
   g.appendChild(hit);
   r._hit = hit;
 
@@ -736,6 +746,7 @@ function onPointerDown(e) {
     h._label.classList.add('grabbing');
   } else {
     h._dot.classList.add('grabbing');
+    if (h._label) h._label.classList.add('grabbing');
     h._dot.parentElement.classList.add('active');
   }
   const p = clientToSvg(e.clientX, e.clientY);
@@ -777,6 +788,7 @@ function onPointerUp() {
     h._label.classList.remove('grabbing');
   } else {
     h._dot.classList.remove('grabbing');
+    if (h._label) h._label.classList.remove('grabbing');
     h._dot.parentElement.classList.remove('active');
   }
   activeIdx = -1;
