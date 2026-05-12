@@ -621,7 +621,7 @@ roles.forEach((r, i) => {
   g.appendChild(label);
   r._label = label;
 
-  const hit = el('circle', { class: 'role-hit', cx: r.x, cy: r.y, r: 34, 'data-role-idx': i });
+  const hit = el('circle', { class: 'role-hit', cx: r.x, cy: r.y, r: 46, 'data-role-idx': i });
   g.appendChild(hit);
   r._hit = hit;
 
@@ -750,8 +750,13 @@ function onPointerDown(e) {
     h._dot.parentElement.classList.add('active');
   }
   const p = clientToSvg(e.clientX, e.clientY);
-  pointerOffset.x = p.x - h.x;
-  pointerOffset.y = p.y - h.y;
+  if (activeKind === 'role') {
+    pointerOffset.x = 0;
+    pointerOffset.y = 0;
+  } else {
+    pointerOffset.x = p.x - h.x;
+    pointerOffset.y = p.y - h.y;
+  }
   e.preventDefault();
   SVG.setPointerCapture && SVG.setPointerCapture(e.pointerId);
 }
