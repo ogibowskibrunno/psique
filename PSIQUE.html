@@ -172,9 +172,13 @@
     font-style: italic;
     font-size: 20px;
     fill: rgba(244, 239, 230, 0.92);
+    stroke: rgba(90, 30, 16, 0.82);
+    stroke-width: 3px;
+    stroke-linejoin: round;
+    paint-order: stroke fill;
     cursor: grab;
     pointer-events: auto;
-    transition: fill 160ms ease;
+    transition: fill 160ms ease, stroke 160ms ease;
   }
   .label-inside:hover,
   .label-inside.grabbing { fill: var(--paper); }
