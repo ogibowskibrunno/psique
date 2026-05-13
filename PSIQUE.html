@@ -929,6 +929,34 @@ function buildBlobPath(time) {
   return d;
 }
 
+function isInTopSemicircle(h) {
+  const dy = h.y - CENTER.y;
+  if (dy < -0.1) return true;
+  if (dy > 0.1) return false;
+  return h.x < CENTER.x;
+}
+
+function angleForTopSemicircle(angle) {
+  return angle > Math.PI - 0.0001 ? -Math.PI : angle;
+}
+
+function sectorWeight(h) {
+  const dist = Math.hypot(h.x - CENTER.x, h.y - CENTER.y);
+  const pull = Math.max(0, dist - h.restRadius);
+  const maxPull = Math.max(1, (h.axis === 'secondary' ? FUNCTION_SECONDARY_MAX : FUNCTION_PRIMARY_MAX) - h.restRadius);
+  return 1 + Math.min(1, pull / maxPull) * 0.88;
+}
+
+function sectorPath(a0, a1) {
+  const fullR = 600;
+  const x0 = CENTER.x + Math.cos(a0) * fullR;
+  const y0 = CENTER.y + Math.sin(a0) * fullR;
+  const x1 = CENTER.x + Math.cos(a1) * fullR;
+  const y1 = CENTER.y + Math.sin(a1) * fullR;
+  const large = (a1 - a0) > Math.PI ? 1 : 0;
+  return `M ${CENTER.x} ${CENTER.y} L ${x0.toFixed(1)} ${y0.toFixed(1)} A ${fullR} ${fullR} 0 ${large} 1 ${x1.toFixed(1)} ${y1.toFixed(1)} Z`;
+}
+
 //------------------------------------------------------------
 // Animation loop: spring physics for handles, redraw blob
 //------------------------------------------------------------
@@ -1027,48 +1055,42 @@ function tick() {
   document.getElementById('blobClipPath').setAttribute('d', d);
 
   // ---- Colored sectors ----
-  // Each function gets an angular slice of the blob.
-  // The slice angular WIDTH grows with that function's "development" (its pull beyond rest).
-  // Default: at rest all four are equal (90° each).
-  // As one is pulled out, its slice grows; opposite is fixed (paired). Neighbors shrink.
+  // Each function keeps its own color. The upper and lower semicircles are
+  // normalized separately, so each function only competes for space inside
+  // the half of the circle where its handle currently lives.
   {
-    // 1. compute development per function (pull beyond rest, normalized)
-    const devs = handles.map(h => {
-      const dist = Math.hypot(h.x - CENTER.x, h.y - CENTER.y);
-      return Math.max(0, dist - h.restRadius);
-    });
-    const maxDev = 200; // px — beyond this, fully developed
-    const devNorm = devs.map(d => Math.min(1, d / maxDev));
+    const halves = [
+      {
+        start: -Math.PI,
+        end: 0,
+        entries: handles
+          .filter(isInTopSemicircle)
+          .map(h => ({ h, angle: angleForTopSemicircle(Math.atan2(h.y - CENTER.y, h.x - CENTER.x)), weight: sectorWeight(h) }))
+          .sort((a, b) => a.angle - b.angle),
+      },
+      {
+        start: 0,
+        end: Math.PI,
+        entries: handles
+          .filter(h => !isInTopSemicircle(h))
+          .map(h => ({ h, angle: Math.atan2(h.y - CENTER.y, h.x - CENTER.x), weight: sectorWeight(h) }))
+          .sort((a, b) => a.angle - b.angle),
+      },
+    ];
 
-    // 2. each sector base = 0.25 (quarter), bonus = devNorm * 0.18, total renormalized
-    const weights = devNorm.map(d => 0.25 + d * 0.22);
-    const sumW = weights.reduce((a, b) => a + b, 0);
-    const fracs = weights.map(w => w / sumW);
+    for (const half of halves) {
+      if (!half.entries.length) continue;
+      const sumW = half.entries.reduce((sum, entry) => sum + entry.weight, 0);
+      let cursor = half.start;
 
-    // 3. lay out wedges centered on each function's angle
-    // sort by angle so the slices tile around the circle
-    const order = handles.map((h, i) => ({
-      i,
-      ang: Math.atan2(h.y - CENTER.y, h.x - CENTER.x),
-    })).sort((a, b) => a.ang - b.ang);
-
-    // give each its share of 2π
-    const fullR = 600; // overdraw far beyond blob; clip handles trimming
-    let cursor = order[0].ang - fracs[order[0].i] * Math.PI; // start so first wedge is centered on its angle
-    for (const o of order) {
-      const f = fracs[o.i] * Math.PI * 2;
-      const a0 = cursor;
-      const a1 = cursor + f;
-      cursor = a1;
-
-      // build wedge path
-      const x0 = CENTER.x + Math.cos(a0) * fullR;
-      const y0 = CENTER.y + Math.sin(a0) * fullR;
-      const x1 = CENTER.x + Math.cos(a1) * fullR;
-      const y1 = CENTER.y + Math.sin(a1) * fullR;
-      const large = (a1 - a0) > Math.PI ? 1 : 0;
-      const wedgeD = `M ${CENTER.x} ${CENTER.y} L ${x0.toFixed(1)} ${y0.toFixed(1)} A ${fullR} ${fullR} 0 ${large} 1 ${x1.toFixed(1)} ${y1.toFixed(1)} Z`;
-      handles[o.i]._sector.setAttribute('d', wedgeD);
+      half.entries.forEach((entry, idx) => {
+        const a0 = cursor;
+        const a1 = idx === half.entries.length - 1
+          ? half.end
+          : cursor + (half.end - half.start) * (entry.weight / sumW);
+        entry.h._sector.setAttribute('d', sectorPath(a0, a1));
+        cursor = a1;
+      });
     }
   }
 
