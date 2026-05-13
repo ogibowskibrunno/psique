@@ -929,15 +929,31 @@ function buildBlobPath(time) {
   return d;
 }
 
-function isInTopSemicircle(h) {
-  const dy = h.y - CENTER.y;
-  if (dy < -0.1) return true;
-  if (dy > 0.1) return false;
-  return h.x < CENTER.x;
+const SECTOR_TOP_START = -Math.PI * 0.75;
+const SECTOR_TOP_END = Math.PI * 0.25;
+const SECTOR_BOTTOM_START = SECTOR_TOP_END;
+const SECTOR_BOTTOM_END = SECTOR_TOP_START + Math.PI * 2;
+
+function angleFromStart(angle, start) {
+  while (angle < start) angle += Math.PI * 2;
+  while (angle >= start + Math.PI * 2) angle -= Math.PI * 2;
+  return angle;
 }
 
-function angleForTopSemicircle(angle) {
-  return angle > Math.PI - 0.0001 ? -Math.PI : angle;
+function angleForHandle(h) {
+  return Math.atan2(h.y - CENTER.y, h.x - CENTER.x);
+}
+
+function isInTopSemicircle(h) {
+  return angleFromStart(angleForHandle(h), SECTOR_TOP_START) <= Math.PI;
+}
+
+function sectorEntry(h, start) {
+  return {
+    h,
+    angle: angleFromStart(angleForHandle(h), start),
+    weight: sectorWeight(h),
+  };
 }
 
 function sectorWeight(h) {
@@ -1061,19 +1077,19 @@ function tick() {
   {
     const halves = [
       {
-        start: -Math.PI,
-        end: 0,
+        start: SECTOR_TOP_START,
+        end: SECTOR_TOP_END,
         entries: handles
           .filter(isInTopSemicircle)
-          .map(h => ({ h, angle: angleForTopSemicircle(Math.atan2(h.y - CENTER.y, h.x - CENTER.x)), weight: sectorWeight(h) }))
+          .map(h => sectorEntry(h, SECTOR_TOP_START))
           .sort((a, b) => a.angle - b.angle),
       },
       {
-        start: 0,
-        end: Math.PI,
+        start: SECTOR_BOTTOM_START,
+        end: SECTOR_BOTTOM_END,
         entries: handles
           .filter(h => !isInTopSemicircle(h))
-          .map(h => ({ h, angle: Math.atan2(h.y - CENTER.y, h.x - CENTER.x), weight: sectorWeight(h) }))
+          .map(h => sectorEntry(h, SECTOR_BOTTOM_START))
           .sort((a, b) => a.angle - b.angle),
       },
     ];
