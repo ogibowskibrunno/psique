@@ -218,10 +218,10 @@
 
   .liquid-fill {
     fill: url(#liquidGrad);
-    opacity: 0.86;
+    opacity: 0;
   }
   .sector-fill {
-    opacity: 0.94;
+    opacity: 1;
   }
   .liquid-shadow {
     fill: none;
@@ -416,7 +416,7 @@
     <g id="sectors" clip-path="url(#blobClip)" style="mix-blend-mode: normal;"></g>
 
     <!-- subtle inner highlight (no filter) -->
-    <path id="blobHighlight" d="" fill="none" stroke="rgba(255,220,200,0.18)" stroke-width="1" pointer-events="none"></path>
+    <path id="blobHighlight" d="" fill="none" stroke="transparent" stroke-width="1" pointer-events="none"></path>
 
     <!-- inside labels: introversão / extroversão -->
     <text id="lblIntro" class="label-inside" text-anchor="middle" data-attitude-idx="0">introversão</text>
@@ -444,7 +444,7 @@ const FUNCTION_TONES = [
   '#5a1e10',
   '#8a5745',
   '#c09b72',
-  '#eadfce',
+  '#b8a48f',
 ];
 
 // Four functions, by angle (radians). 0 = right (east).
@@ -933,6 +933,7 @@ const SECTOR_TOP_START = -Math.PI * 0.75;
 const SECTOR_TOP_END = Math.PI * 0.25;
 const SECTOR_BOTTOM_START = SECTOR_TOP_END;
 const SECTOR_BOTTOM_END = SECTOR_TOP_START + Math.PI * 2;
+const SECTOR_OVERLAP = 0.006;
 
 function angleFromStart(angle, start) {
   while (angle < start) angle += Math.PI * 2;
@@ -945,7 +946,7 @@ function angleForHandle(h) {
 }
 
 function isInTopSemicircle(h) {
-  return angleFromStart(angleForHandle(h), SECTOR_TOP_START) <= Math.PI;
+  return angleFromStart(angleForHandle(h), SECTOR_TOP_START) <= SECTOR_TOP_END;
 }
 
 function sectorEntry(h, start) {
@@ -965,11 +966,13 @@ function sectorWeight(h) {
 
 function sectorPath(a0, a1) {
   const fullR = 600;
-  const x0 = CENTER.x + Math.cos(a0) * fullR;
-  const y0 = CENTER.y + Math.sin(a0) * fullR;
-  const x1 = CENTER.x + Math.cos(a1) * fullR;
-  const y1 = CENTER.y + Math.sin(a1) * fullR;
-  const large = (a1 - a0) > Math.PI ? 1 : 0;
+  const start = a0 - SECTOR_OVERLAP;
+  const end = a1 + SECTOR_OVERLAP;
+  const x0 = CENTER.x + Math.cos(start) * fullR;
+  const y0 = CENTER.y + Math.sin(start) * fullR;
+  const x1 = CENTER.x + Math.cos(end) * fullR;
+  const y1 = CENTER.y + Math.sin(end) * fullR;
+  const large = (end - start) > Math.PI ? 1 : 0;
   return `M ${CENTER.x} ${CENTER.y} L ${x0.toFixed(1)} ${y0.toFixed(1)} A ${fullR} ${fullR} 0 ${large} 1 ${x1.toFixed(1)} ${y1.toFixed(1)} Z`;
 }
 
