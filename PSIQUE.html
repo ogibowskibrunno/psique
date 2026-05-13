@@ -929,10 +929,6 @@ function buildBlobPath(time) {
   return d;
 }
 
-const SECTOR_TOP_START = -Math.PI * 0.75;
-const SECTOR_TOP_END = Math.PI * 0.25;
-const SECTOR_BOTTOM_START = SECTOR_TOP_END;
-const SECTOR_BOTTOM_END = SECTOR_TOP_START + Math.PI * 2;
 const SECTOR_OVERLAP = 0.006;
 
 function angleFromStart(angle, start) {
@@ -945,8 +941,20 @@ function angleForHandle(h) {
   return Math.atan2(h.y - CENTER.y, h.x - CENTER.x);
 }
 
-function isInTopSemicircle(h) {
-  return angleFromStart(angleForHandle(h), SECTOR_TOP_START) <= SECTOR_TOP_END;
+function currentSectorFrame() {
+  const auxiliaryAxis = Math.atan2(roles[2].y - CENTER.y, roles[2].x - CENTER.x);
+  const topStart = auxiliaryAxis - Math.PI / 2;
+  const topEnd = auxiliaryAxis + Math.PI / 2;
+  return {
+    topStart,
+    topEnd,
+    bottomStart: topEnd,
+    bottomEnd: topStart + Math.PI * 2,
+  };
+}
+
+function isInTopSemicircle(h, frame) {
+  return angleFromStart(angleForHandle(h), frame.topStart) <= frame.topEnd;
 }
 
 function sectorEntry(h, start) {
@@ -1074,25 +1082,26 @@ function tick() {
   document.getElementById('blobClipPath').setAttribute('d', d);
 
   // ---- Colored sectors ----
-  // Each function keeps its own color. The upper and lower semicircles are
-  // normalized separately, so each function only competes for space inside
-  // the half of the circle where its handle currently lives.
+  // Each function keeps its own color. The two semicircles rotate with the
+  // auxiliary/tertiary axis, so lateral colors follow that role axis instead
+  // of a fixed diagonal.
   {
+    const frame = currentSectorFrame();
     const halves = [
       {
-        start: SECTOR_TOP_START,
-        end: SECTOR_TOP_END,
+        start: frame.topStart,
+        end: frame.topEnd,
         entries: handles
-          .filter(isInTopSemicircle)
-          .map(h => sectorEntry(h, SECTOR_TOP_START))
+          .filter(h => isInTopSemicircle(h, frame))
+          .map(h => sectorEntry(h, frame.topStart))
           .sort((a, b) => a.angle - b.angle),
       },
       {
-        start: SECTOR_BOTTOM_START,
-        end: SECTOR_BOTTOM_END,
+        start: frame.bottomStart,
+        end: frame.bottomEnd,
         entries: handles
-          .filter(h => !isInTopSemicircle(h))
-          .map(h => sectorEntry(h, SECTOR_BOTTOM_START))
+          .filter(h => !isInTopSemicircle(h, frame))
+          .map(h => sectorEntry(h, frame.bottomStart))
           .sort((a, b) => a.angle - b.angle),
       },
     ];
