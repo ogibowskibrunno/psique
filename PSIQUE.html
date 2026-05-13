@@ -282,6 +282,25 @@
     cursor: grab;
     pointer-events: all;
   }
+  .role-group.locked .role-handle,
+  .role-group.locked .role-label,
+  .role-group.locked .role-hit {
+    cursor: default;
+  }
+  .role-group.locked:hover .role-handle,
+  .role-group.locked .role-handle:hover {
+    fill: var(--paper-2);
+    stroke-width: 1.2;
+  }
+  .role-group.locked:hover .role-ring {
+    opacity: 0;
+  }
+  .role-group.locked .role-label:hover {
+    fill: var(--ink-soft);
+  }
+  .role-group.locked .role-hit {
+    pointer-events: none;
+  }
 
   .reset-btn {
     position: fixed;
@@ -440,8 +459,8 @@ const FUNCTIONS = [
 const ROLE_PRIMARY_REST = CONTROL_RADIUS + 104;
 const ROLE_SECONDARY_REST = CONTROL_RADIUS + 58;
 const ROLE_POSITIONS = [
-  { id: 'superior',  label: 'superior',  angle: -Math.PI / 2,                  pair: 1, radius: ROLE_PRIMARY_REST },
-  { id: 'inferior',  label: 'inferior',  angle:  Math.PI / 2,                  pair: 0, radius: ROLE_PRIMARY_REST },
+  { id: 'superior',  label: 'superior',  angle: -Math.PI / 2,                  pair: 1, radius: ROLE_PRIMARY_REST, locked: true },
+  { id: 'inferior',  label: 'inferior',  angle:  Math.PI / 2,                  pair: 0, radius: ROLE_PRIMARY_REST, locked: true },
   { id: 'auxiliar',  label: 'auxiliar',  angle: -Math.PI / 2 + Math.PI * 0.28, pair: 3, radius: ROLE_SECONDARY_REST },
   { id: 'terciaria', label: 'terciária', angle:  Math.PI / 2 + Math.PI * 0.28, pair: 2, radius: ROLE_SECONDARY_REST },
 ];
@@ -603,7 +622,8 @@ handles.forEach((h, i) => {
 });
 
 roles.forEach((r, i) => {
-  const g = el('g', { class: 'role-group', 'data-role-idx': i });
+  const roleAttrs = r.locked ? {} : { 'data-role-idx': i };
+  const g = el('g', { class: `role-group${r.locked ? ' locked' : ''}`, ...roleAttrs });
 
   const spoke = el('line', { class: 'role-spoke' });
   g.appendChild(spoke);
@@ -613,15 +633,15 @@ roles.forEach((r, i) => {
   g.appendChild(ring);
   r._ring = ring;
 
-  const dot = el('circle', { class: 'role-handle', cx: r.x, cy: r.y, r: 5.5, 'data-role-idx': i });
+  const dot = el('circle', { class: 'role-handle', cx: r.x, cy: r.y, r: 5.5, ...roleAttrs });
   g.appendChild(dot);
   r._dot = dot;
 
-  const label = el('text', { class: 'role-label', x: r.x, y: r.y, 'text-anchor': 'middle', 'data-role-idx': i }, r.label);
+  const label = el('text', { class: 'role-label', x: r.x, y: r.y, 'text-anchor': 'middle', ...roleAttrs }, r.label);
   g.appendChild(label);
   r._label = label;
 
-  const hit = el('circle', { class: 'role-hit', cx: r.x, cy: r.y, r: 46, 'data-role-idx': i });
+  const hit = el('circle', { class: 'role-hit', cx: r.x, cy: r.y, r: 46, ...roleAttrs });
   g.appendChild(hit);
   r._hit = hit;
 
@@ -731,6 +751,8 @@ function onPointerDown(e) {
     activeKind = 'attitude';
     activeIdx = +attitudeIdx;
   } else if (roleIdx != null) {
+    const role = roles[+roleIdx];
+    if (!role || role.locked) return;
     activeKind = 'role';
     activeIdx = +roleIdx;
   } else if (fnIdx != null) {
