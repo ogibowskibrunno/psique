@@ -217,48 +217,50 @@
   .legend-note { font-size: 1.5vmin; letter-spacing: 0.09em; opacity: 0.58; line-height: 1.8; }
   .legend-note.head { opacity: 0.38; font-size: 1.3vmin; letter-spacing: 0.14em; margin-bottom: 2px; }
 
-  /* ── Type panel (left-center) ── */
-  .type-panel {
-    position: fixed; top: 14px; left: 16px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 1.7vmin; letter-spacing: 0.12em;
-    text-transform: uppercase; color: var(--ink-soft);
-    z-index: 10; line-height: 2.0;
-  }
-  .type-panel .tp-head { font-size: 1.4vmin; opacity: 0.45; margin-bottom: 1px; }
-  .type-panel .tp-fn {
+  /* ── Type info inside .meta (desktop) ── */
+  .meta .meta-sep { border: 0; border-top: 1px solid var(--ink-faint); width: 28px; margin: 14px 0 10px; }
+  .meta .tipo-label { font-size: 1.3vmin; opacity: 0.38; letter-spacing: 0.16em; margin-bottom: 5px; }
+  .meta .tipo-fn {
     font-family: 'Cormorant Garamond', serif; font-style: italic;
-    font-size: clamp(14px, 4.5vmin, 32px); letter-spacing: 0.02em;
-    text-transform: none; color: var(--ink); display: block; line-height: 1.1;
+    font-size: 2.6vmin; color: var(--ink); text-transform: none;
+    display: block; line-height: 1.1; margin-bottom: 8px;
   }
+  .meta .tipo-hist { font-size: 1.2vmin; opacity: 0.38; font-style: italic; line-height: 1.6; margin-top: 4px; }
+
+  /* ── Attitude toggle (inside meta on desktop) ── */
   .attitude-toggle {
-    display: inline-block; cursor: pointer; margin-top: 5px;
-    border: 1px solid var(--ink-faint); padding: 2px 9px;
-    font-size: 1.5vmin; letter-spacing: 0.18em;
-    transition: all 160ms ease;
+    display: inline-block; cursor: pointer;
+    border: 1px solid var(--ink-faint); padding: 2px 8px;
+    font-size: 1.4vmin; letter-spacing: 0.18em; font-family: 'JetBrains Mono', monospace;
+    text-transform: uppercase; transition: all 160ms ease;
   }
   .attitude-toggle:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-  .type-panel .tp-hist { font-size: 1.3vmin; opacity: 0.45; margin-top: 4px; font-style: italic; }
 
-  @media (max-width: 699px) {
-    .type-panel { top: auto; bottom: 110px; left: 8px; }
-    .type-panel .tp-fn { font-size: clamp(12px, 3.8vmin, 20px); }
-    .type-panel .tp-head, .type-panel .tp-hist { display: none; }
+  /* ── Mobile tipo indicator (bottom-left, small) ── */
+  .tipo-mobile {
+    position: fixed; bottom: 108px; left: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(7px, 2vmin, 11px); letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--ink-soft); z-index: 10;
   }
+  .tipo-mobile .tm-fn {
+    font-family: 'Cormorant Garamond', serif; font-style: italic;
+    font-size: clamp(11px, 3.2vmin, 18px); color: var(--ink);
+    text-transform: none; display: block; line-height: 1.1; margin-bottom: 4px;
+  }
+  .tipo-mobile .attitude-toggle { font-size: clamp(7px, 1.8vmin, 10px); padding: 1px 6px; }
+  @media (min-width: 700px) { .tipo-mobile { display: none; } }
 
-  /* ── Explorer button ── */
+  /* ── Explorer button (lives inside .legend, not fixed) ── */
   .explorer-btn {
-    position: fixed; bottom: 16px; left: 16px;
-    font-family: 'JetBrains Mono', monospace; font-size: 2vmin;
+    display: inline-block; margin-top: 14px;
+    font-family: 'JetBrains Mono', monospace; font-size: 1.6vmin;
     letter-spacing: 0.18em; text-transform: uppercase;
-    color: var(--ink-soft); background: var(--paper);
-    border: 1px solid var(--ink-faint); padding: 7px 14px;
-    cursor: pointer; z-index: 11; transition: all 160ms ease;
-    white-space: nowrap;
-    display: none;
+    color: var(--ink-soft); background: transparent;
+    border: 1px solid var(--ink-faint); padding: 6px 12px;
+    cursor: pointer; transition: all 160ms ease; white-space: nowrap;
   }
   .explorer-btn:hover { color: var(--paper); background: var(--ink); border-color: var(--ink); }
-  @media (min-width: 700px) { .explorer-btn { display: block; } }
 
   /* ── Explorer panel (full-screen modal) ── */
   .explorer-panel {
@@ -306,20 +308,26 @@
   }
   .explorer-close:hover { color: var(--ink); }
 
-  /* ── Self / Transcendent Function ── */
-  .self-label {
-    font-family: 'JetBrains Mono', monospace; font-size: 1.5vmin;
-    letter-spacing: 0.26em; text-transform: uppercase;
-    fill: rgba(244,239,230,0.65); pointer-events: none;
-  }
 </style>
 </head>
 <body>
 
-<div class="meta">
+<!-- Left info panel (desktop only) -->
+<div class="meta" id="metaBlock">
   <div class="em">Fig. I</div>
   <hr>
   <div>Modelo da<br>Psique · C.G. Jung</div>
+  <div class="meta-sep"></div>
+  <div class="tipo-label">Tipo atual</div>
+  <span class="tipo-fn" id="typeFnName">—</span>
+  <div id="attitudeToggle" class="attitude-toggle">introvertido</div>
+  <div class="tipo-hist" id="typeHist"></div>
+</div>
+
+<!-- Mobile tipo indicator (compact, bottom-left) -->
+<div class="tipo-mobile">
+  <span class="tm-fn" id="typeFnNameMobile">—</span>
+  <span id="attitudeToggleMobile" class="attitude-toggle">I</span>
 </div>
 
 <div class="title-block">
@@ -329,15 +337,7 @@
 
 <button class="reset-btn" id="resetBtn">↺ Restaurar</button>
 
-<div class="type-panel" id="typePanel">
-  <div class="tp-head">Tipo atual</div>
-  <span class="tp-fn" id="typeFnName">—</span>
-  <div id="attitudeToggle" class="attitude-toggle">introvertido</div>
-  <div class="tp-hist" id="typeHist"></div>
-</div>
-
-<button class="explorer-btn" id="explorerBtn">⊹ Explorar tipos</button>
-
+<!-- Explorer panel (modal) -->
 <div class="explorer-panel" id="explorerPanel">
   <button class="explorer-close" id="explorerClose">× fechar</button>
   <h2>Os Oito Tipos Psicológicos</h2>
@@ -345,6 +345,7 @@
   <div class="explorer-types" id="explorerTypes"></div>
 </div>
 
+<!-- Legend + explorer button (desktop bottom-left) -->
 <div class="legend">
   <div class="row"><span class="dot" style="background:#5a1e10"></span><span>sentimento · água</span></div>
   <div class="row"><span class="dot" style="background:#8a5745"></span><span>sensação · terra</span></div>
@@ -355,6 +356,7 @@
   <div class="legend-note">pneumatikoi · pensamento</div>
   <div class="legend-note">psychikoi · sentimento</div>
   <div class="legend-note">hylikoi · sensação</div>
+  <button class="explorer-btn" id="explorerBtn">⊹ Explorar tipos</button>
 </div>
 
 <div class="credit">
@@ -405,7 +407,6 @@
       <circle id="selfRing2" fill="none" stroke="rgba(90,30,16,0.10)" stroke-width="0.5"/>
       <circle id="selfRing1" fill="none" stroke="rgba(90,30,16,0.18)" stroke-width="0.7"/>
       <circle id="selfDot" r="2.5" fill="rgba(90,30,16,0.48)"/>
-      <text id="selfLabel" class="self-label" text-anchor="middle">Self</text>
     </g>
   </svg>
 </div>
@@ -569,14 +570,10 @@ const rolesGroup  = document.getElementById('rolesGroup');
 function buildAxis() {
   const m = 18;
   axisGroup.append(
-    // Horizontal axis dashes
     el('line', { class:'axis-dash', x1:m,                        y1:CENTER.y, x2:CENTER.x - L.radius - 6, y2:CENTER.y }),
     el('line', { class:'axis-dash', x1:CENTER.x + L.radius + 6, y1:CENTER.y, x2:VB.w - m,                y2:CENTER.y }),
     el('line', { class:'axis-line', x1:m,        y1:CENTER.y-8, x2:m,        y2:CENTER.y+8 }),
-    el('line', { class:'axis-line', x1:VB.w - m, y1:CENTER.y-8, x2:VB.w - m, y2:CENTER.y+8 }),
-    // Vertical consciousness axis labels (superior=conscious top, inferior=unconscious bottom)
-    el('text', { class:'label-axis', x:m + 4, y:m + 22 }, 'consciência'),
-    el('text', { class:'label-axis', x:m + 4, y:VB.h - m - 6 }, 'inconsciente')
+    el('line', { class:'axis-line', x1:VB.w - m, y1:CENTER.y-8, x2:VB.w - m, y2:CENTER.y+8 })
   );
 }
 
@@ -660,15 +657,16 @@ attitudes.forEach((a, i) => {
 // ─────────────────────────────────────────────
 // Self / Transcendent Function elements (cached)
 // ─────────────────────────────────────────────
-const selfRing1El  = document.getElementById('selfRing1');
-const selfRing2El  = document.getElementById('selfRing2');
-const selfDotEl    = document.getElementById('selfDot');
-const selfLabelEl  = document.getElementById('selfLabel');
+const selfRing1El = document.getElementById('selfRing1');
+const selfRing2El = document.getElementById('selfRing2');
+const selfDotEl   = document.getElementById('selfDot');
 
-// Type display elements (may be null on very old browsers)
-const typeFnNameEl    = document.getElementById('typeFnName');
-const attitudeToggleEl = document.getElementById('attitudeToggle');
-const typeHistEl      = document.getElementById('typeHist');
+// Type display elements
+const typeFnNameEl      = document.getElementById('typeFnName');
+const typeFnNameMobEl   = document.getElementById('typeFnNameMobile');
+const attitudeToggleEl  = document.getElementById('attitudeToggle');
+const attToggleMobEl    = document.getElementById('attitudeToggleMobile');
+const typeHistEl        = document.getElementById('typeHist');
 
 // ─────────────────────────────────────────────
 // Type detection helpers
@@ -702,13 +700,19 @@ function detectSuperiorFn() {
 }
 
 function updateTypeDisplay() {
-  if (!typeFnNameEl) return;
   const sup = detectSuperiorFn();
-  typeFnNameEl.textContent = sup.label;
-  attitudeToggleEl.textContent = currentAttitude === 'I' ? 'introvertido' : 'extrovertido';
-  const si = handles.indexOf(sup);
-  const match = TYPES.find(t => t.att === currentAttitude && Math.abs(t.angles[si] - _T) < 0.5);
-  typeHistEl.textContent = (match && match.hist) ? match.hist : '';
+  const fn  = sup ? sup.label : '—';
+  const att = currentAttitude === 'I' ? 'introvertido' : 'extrovertido';
+  const attShort = currentAttitude;
+  if (typeFnNameEl)     typeFnNameEl.textContent = fn;
+  if (typeFnNameMobEl)  typeFnNameMobEl.textContent = fn;
+  if (attitudeToggleEl) attitudeToggleEl.textContent = att;
+  if (attToggleMobEl)   attToggleMobEl.textContent = attShort;
+  if (typeHistEl && sup) {
+    const si = handles.indexOf(sup);
+    const match = TYPES.find(t => t.att === currentAttitude && Math.abs(t.angles[si] - _T) < 0.5);
+    typeHistEl.textContent = (match && match.hist) ? match.hist : '';
+  }
 }
 
 function applyType(typeIdx) {
@@ -1041,8 +1045,6 @@ function tick() {
   selfRing2El.setAttribute('cx', CENTER.x); selfRing2El.setAttribute('cy', CENTER.y);
   selfRing2El.setAttribute('r', r2.toFixed(2));
   selfDotEl.setAttribute('cx', CENTER.x);   selfDotEl.setAttribute('cy', CENTER.y);
-  selfLabelEl.setAttribute('x', CENTER.x);
-  selfLabelEl.setAttribute('y', (CENTER.y + L.radius * 0.20).toFixed(1));
 
   // ── Update type display (throttled — every ~30 frames) ──
   if (Math.round(time / 16) % 30 === 0) updateTypeDisplay();
@@ -1115,11 +1117,13 @@ document.getElementById('explorerClose').addEventListener('click', () => {
   document.getElementById('explorerPanel').classList.remove('open');
 });
 
-// ── Attitude toggle ──
-attitudeToggleEl && attitudeToggleEl.addEventListener('click', () => {
+// ── Attitude toggles (desktop + mobile) ──
+function toggleAttitude() {
   currentAttitude = currentAttitude === 'I' ? 'E' : 'I';
   updateTypeDisplay();
-});
+}
+attitudeToggleEl  && attitudeToggleEl.addEventListener('click', toggleAttitude);
+attToggleMobEl    && attToggleMobEl.addEventListener('click', toggleAttitude);
 
 // ── Initial type display ──
 updateTypeDisplay();
