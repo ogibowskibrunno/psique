@@ -180,12 +180,12 @@
   .legend .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ink); flex: none; }
 
   .credit {
-    position: fixed; bottom: 16px; right: 16px;
+    position: fixed; bottom: 60px; right: 8px;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 1.6vmin; letter-spacing: 0.16em;
+    font-size: clamp(8px, 2.5vmin, 12px); letter-spacing: 0.10em;
     text-transform: uppercase; color: var(--ink-soft);
-    z-index: 10; text-align: right; line-height: 1.8;
-    display: none; /* hidden on mobile */
+    z-index: 10; text-align: right; line-height: 1.6;
+    display: block; /* always visible */
   }
   .credit a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--ink-faint); }
 
@@ -204,7 +204,7 @@
   @media (min-width: 700px) {
     .meta { display: block; }
     .legend { display: block; }
-    .credit { display: block; }
+    .credit { bottom: 16px; right: 16px; font-size: 1.6vmin; letter-spacing: 0.16em; line-height: 1.8; }
     .reset-btn {
       bottom: auto; left: auto; transform: none;
       top: 50%; right: 28px; transform: translateY(-50%);
