@@ -587,8 +587,23 @@ function onPointerMove(e) {
                  : activeKind === 'role'     ? 30 : 0;
   const pad = activeKind === 'function' ? 40 : 28;
 
+  // Auxiliar fica sempre no semiciclo superior; terciária no inferior
+  let fx = nx, fy = ny;
+  const isSecondary = activeKind === 'function'
+    ? (h.id === 'sensacao' || h.id === 'intuicao')
+    : activeKind === 'role'
+    ? (h.id === 'auxiliar' || h.id === 'terciaria')
+    : false;
+  if (isSecondary) {
+    const margin = 4;
+    if (h.id === 'sensacao' || h.id === 'auxiliar')
+      fy = Math.min(fy, CENTER.y - margin);   // topo
+    else
+      fy = Math.max(fy, CENTER.y + margin);   // baixo
+  }
+
   const opp = col[h.pair];
-  if (opp) moveOpposedPair(h, opp, nx, ny, minD, maxD, outerOff, pad);
+  if (opp) moveOpposedPair(h, opp, fx, fy, minD, maxD, outerOff, pad);
 }
 
 function onPointerUp() {
