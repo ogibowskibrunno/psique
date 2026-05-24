@@ -539,6 +539,26 @@ const attitudes = ATTITUDE_POSITIONS.map((a, i) => ({
   ...a, idx:i, restX:0, restY:0, x:0, y:0, vx:0, vy:0, dragging:false,
 }));
 
+function attitudeAngleFor(id, attitude = currentAttitude) {
+  const introTop = attitude === 'I';
+  if (id === 'introversao') return introTop ? -Math.PI/2 : Math.PI/2;
+  return introTop ? Math.PI/2 : -Math.PI/2;
+}
+
+function syncAttitudeTargets({ immediate = false } = {}) {
+  attitudes.forEach(a => {
+    const ang = attitudeAngleFor(a.id);
+    a.restX = L.cx + Math.cos(ang) * L.attRest;
+    a.restY = L.cy + Math.sin(ang) * L.attRest;
+    if (immediate) {
+      if (!a.dragging) { a.x = a.restX; a.y = a.restY; a.vx = 0; a.vy = 0; }
+      a._returning = false;
+    } else {
+      a._returning = true;
+    }
+  });
+}
+
 function resetPositions() {
   handles.forEach((h, i) => {
     const f = FUNCTIONS[i];
@@ -555,12 +575,7 @@ function resetPositions() {
     r.restY = L.cy + Math.sin(rp.angle) * rad;
     if (!r.dragging) { r.x = r.restX; r.y = r.restY; }
   });
-  attitudes.forEach((a, i) => {
-    const ap = ATTITUDE_POSITIONS[i];
-    a.restX = L.cx + Math.cos(ap.angle) * L.attRest;
-    a.restY = L.cy + Math.sin(ap.angle) * L.attRest;
-    if (!a.dragging) { a.x = a.restX; a.y = a.restY; a.vx = 0; a.vy = 0; }
-  });
+  syncAttitudeTargets({ immediate:true });
 }
 
 // ─────────────────────────────────────────────
@@ -739,6 +754,14 @@ function updateTypeDisplay() {
   }
 }
 
+function syncAttitudeFromLabels() {
+  const intro = attitudes.find(a => a.id === 'introversao');
+  const extro = attitudes.find(a => a.id === 'extroversao');
+  if (!intro || !extro) return;
+  currentAttitude = intro.y <= extro.y ? 'I' : 'E';
+  updateTypeDisplay();
+}
+
 function applyType(typeIdx) {
   const tp = TYPES[typeIdx];
   currentAttitude = tp.att;
@@ -751,6 +774,7 @@ function applyType(typeIdx) {
     h._returning = true;
   });
   roles.forEach(r => { r.x = r.restX; r.y = r.restY; });
+  syncAttitudeTargets();
   requestAnimationFrame(returnTick);
   updateTypeDisplay();
 }
@@ -866,8 +890,13 @@ function onPointerUp() {
           : activeKind === 'role'     ? roles[activeIdx]
           :                             handles[activeIdx];
   h.dragging = false;
-  if (activeKind === 'attitude') h._label.classList.remove('grabbing');
-  else { h._dot.classList.remove('grabbing'); h._dot.parentElement.classList.remove('active'); }
+  if (activeKind === 'attitude') {
+    h._label.classList.remove('grabbing');
+    syncAttitudeFromLabels();
+  } else {
+    h._dot.classList.remove('grabbing');
+    h._dot.parentElement.classList.remove('active');
+  }
   activeIdx = -1; activeKind = '';
   requestAnimationFrame(returnTick);
 }
@@ -1143,6 +1172,8 @@ function superiorIndexForType(tp) {
 // ── Attitude toggles (desktop + mobile) ──
 function toggleAttitude() {
   currentAttitude = currentAttitude === 'I' ? 'E' : 'I';
+  syncAttitudeTargets();
+  requestAnimationFrame(returnTick);
   updateTypeDisplay();
 }
 attitudeToggleEl  && attitudeToggleEl.addEventListener('click', toggleAttitude);
