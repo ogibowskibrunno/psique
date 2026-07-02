@@ -787,23 +787,25 @@ function tick() {
   blobHL.setAttribute('d', bPath);
   document.getElementById('blobClipPath').setAttribute('d', bPath);
 
-  // Colored sectors
-  const devs    = handles.map(h => Math.max(0, Math.hypot(h.x-CENTER.x, h.y-CENTER.y) - h.restRadius));
-  const devNorm = devs.map(d => Math.min(1, d / (L.fnMax * 0.55)));
-  const weights = devNorm.map(d => 0.25 + d*0.22);
-  const sumW    = weights.reduce((a,b) => a+b, 0);
-  const fracs   = weights.map(w => w/sumW);
-  const order   = handles.map((h,i) => ({ i, ang: Math.atan2(h.y-CENTER.y, h.x-CENTER.x) }))
-                         .sort((a,b) => a.ang - b.ang);
+  // Colored sectors — each function owns the wedge closest to its own
+  // angle, bounded by the midpoints to its two neighbors. This keeps a
+  // single color owning the whole bottom region when only one function
+  // sits there, instead of splitting it between two fixed-size slices.
+  const order = handles.map((h, i) => ({ i, ang: Math.atan2(h.y-CENTER.y, h.x-CENTER.x) }))
+                       .sort((a, b) => a.ang - b.ang);
+  const n = order.length;
   const fullR = Math.max(VB.w, VB.h);
-  let cursor = order[0].ang - fracs[order[0].i] * Math.PI;
-  for (const o of order) {
-    const f  = fracs[o.i] * Math.PI * 2;
-    const a0 = cursor, a1 = cursor + f;
-    cursor = a1;
+  for (let k = 0; k < n; k++) {
+    const cur = order[k];
+    let prevAng = order[(k - 1 + n) % n].ang;
+    if (prevAng > cur.ang) prevAng -= Math.PI * 2;
+    let nextAng = order[(k + 1) % n].ang;
+    if (nextAng < cur.ang) nextAng += Math.PI * 2;
+    const a0 = (prevAng + cur.ang) / 2;
+    const a1 = (cur.ang + nextAng) / 2;
     const x0=CENTER.x+Math.cos(a0)*fullR, y0=CENTER.y+Math.sin(a0)*fullR;
     const x1=CENTER.x+Math.cos(a1)*fullR, y1=CENTER.y+Math.sin(a1)*fullR;
-    handles[o.i]._sector.setAttribute('d',
+    handles[cur.i]._sector.setAttribute('d',
       `M ${CENTER.x} ${CENTER.y} L ${x0.toFixed(1)} ${y0.toFixed(1)} A ${fullR} ${fullR} 0 ${(a1-a0)>Math.PI?1:0} 1 ${x1.toFixed(1)} ${y1.toFixed(1)} Z`);
   }
 
