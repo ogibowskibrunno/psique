@@ -65,13 +65,6 @@
     text-transform: uppercase;
     fill: var(--ink-soft);
   }
-  .label-axis {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 1.9vmin;
-    letter-spacing: 0.20em;
-    text-transform: uppercase;
-    fill: var(--ink-soft);
-  }
   .label-inside {
     font-family: 'Cormorant Garamond', serif;
     font-style: italic;
@@ -109,35 +102,6 @@
 
   .liquid-fill { fill: url(#liquidGrad); opacity: 0.86; }
   .sector-fill { opacity: 0.94; }
-
-  .role-spoke {
-    stroke: var(--ink); stroke-width: 1;
-    stroke-dasharray: 4 9; opacity: 0.18; pointer-events: none;
-  }
-  .role-handle {
-    fill: var(--paper-2); stroke: var(--ink); stroke-width: 1.2;
-    cursor: grab; transition: fill 160ms ease, stroke-width 160ms ease;
-  }
-  .role-group:hover .role-handle,
-  .role-handle:hover,
-  .role-handle.grabbing { fill: var(--ink); stroke-width: 1.6; }
-  .role-handle.fixed { cursor: default; opacity: 0.50; }
-  .role-group.fixed:hover .role-handle { fill: var(--paper-2); stroke-width: 1.2; }
-  .role-ring {
-    fill: none; stroke: var(--ink); stroke-width: 1;
-    opacity: 0; transition: opacity 160ms ease; pointer-events: none;
-  }
-  .role-group:hover .role-ring,
-  .role-group.active .role-ring { opacity: 0.24; }
-  .role-group.fixed:hover .role-ring { opacity: 0; }
-  .role-label {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 1.8vmin;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    fill: var(--ink-soft);
-    pointer-events: none;
-  }
 
   /* ── Overlay UI (mobile-first base) ── */
   .meta {
@@ -212,7 +176,7 @@
     .title-block { top: 28px; right: 32px; }
   }
 
-  /* ── Type info inside .meta (desktop) ── */
+  /* ── State info inside .meta (desktop) ── */
   .meta .meta-sep { border: 0; border-top: 1px solid var(--ink-faint); width: 28px; margin: 14px 0 10px; }
   .meta .tipo-label { font-size: 1.3vmin; opacity: 0.38; letter-spacing: 0.16em; margin-bottom: 5px; }
   .meta .tipo-fn {
@@ -220,7 +184,6 @@
     font-size: 2.6vmin; color: var(--ink); text-transform: none;
     display: block; line-height: 1.1; margin-bottom: 8px;
   }
-  .meta .tipo-avatar { font-size: 1.2vmin; opacity: 0.46; font-style: italic; line-height: 1.6; margin-top: 4px; }
 
   /* ── Attitude toggle (inside meta on desktop) ── */
   .attitude-toggle {
@@ -231,7 +194,7 @@
   }
   .attitude-toggle:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 
-  /* ── Mobile tipo indicator (bottom-left, small) ── */
+  /* ── Mobile state indicator (bottom-left, small) ── */
   .tipo-mobile {
     position: fixed; bottom: 108px; left: 8px;
     font-family: 'JetBrains Mono', monospace;
@@ -246,98 +209,6 @@
   .tipo-mobile .attitude-toggle { font-size: clamp(7px, 1.8vmin, 10px); padding: 1px 6px; }
   @media (min-width: 700px) { .tipo-mobile { display: none; } }
 
-  /* ── Type avatars on the first screen ── */
-  .types-showcase {
-    position: fixed;
-    top: clamp(214px, 31vmin, 246px);
-    left: 16px;
-    width: clamp(300px, 28vw, 340px);
-    z-index: 10;
-    color: var(--ink);
-    pointer-events: auto;
-  }
-  .types-head {
-    display: block;
-    margin-bottom: 7px;
-  }
-  .types-head h2 {
-    font-family: 'Cormorant Garamond', serif;
-    font-weight: 500; font-style: italic;
-    font-size: clamp(16px, 2.8vmin, 24px);
-    line-height: 1; color: var(--ink);
-  }
-  .types-head span {
-    display: block; margin-top: 4px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: clamp(8px, 1.35vmin, 11px);
-    letter-spacing: 0.16em; text-transform: uppercase;
-    color: var(--ink-soft); opacity: 0.64;
-  }
-  .explorer-types {
-    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px;
-  }
-  .type-card {
-    --avatar-tone: var(--ink);
-    display: grid; grid-template-columns: auto 1fr; gap: 6px; align-items: center;
-    min-width: 0; min-height: 46px;
-    border: 1px solid rgba(90,30,16,0.20);
-    padding: 5px 7px;
-    cursor: pointer; transition: all 160ms ease;
-    background: rgba(237,230,216,0.72);
-    color: var(--ink);
-    text-align: left;
-    font: inherit;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-  }
-  .type-card:hover,
-  .type-card:focus-visible {
-    background: var(--ink); color: var(--paper); outline: none;
-    border-color: var(--ink);
-  }
-  .type-card:hover .tc-att,
-  .type-card:hover .tc-avatar,
-  .type-card:focus-visible .tc-att,
-  .type-card:focus-visible .tc-avatar { opacity: 0.78; }
-  .type-card:hover .type-avatar,
-  .type-card:focus-visible .type-avatar { border-color: rgba(244,239,230,0.72); }
-  .type-avatar {
-    width: 24px; height: 24px; border-radius: 50%;
-    display: grid; place-items: center; flex: none;
-    border: 1px solid rgba(90,30,16,0.34);
-    background:
-      radial-gradient(circle at 36% 28%, rgba(244,239,230,0.86) 0 17%, transparent 18%),
-      linear-gradient(135deg, var(--avatar-tone), rgba(90,30,16,0.58));
-    color: var(--paper);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 7px; letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-  .type-card .tc-name {
-    font-family: 'Cormorant Garamond', serif; font-style: italic;
-    font-size: clamp(11px, 1.65vmin, 14px); display: block; line-height: 1.03;
-  }
-  .type-card .tc-att {
-    display: block; margin-top: 3px;
-    font-family: 'JetBrains Mono', monospace; font-size: clamp(7px, 1.15vmin, 9px);
-    letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.58;
-  }
-  .type-card .tc-avatar {
-    display: block; margin-top: 2px;
-    font-family: 'JetBrains Mono', monospace; font-size: clamp(7px, 1.08vmin, 9px);
-    letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.48;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  @media (max-width: 900px) {
-    .types-showcase { top: 94px; left: 10px; right: 10px; width: auto; }
-    .types-head span { display: none; }
-    .explorer-types {
-      display: flex; overflow-x: auto; gap: 8px; padding-bottom: 4px;
-      scrollbar-width: thin;
-    }
-    .type-card { flex: 0 0 172px; min-height: 56px; }
-  }
-
 </style>
 </head>
 <body>
@@ -348,13 +219,12 @@
   <hr>
   <div>Modelo da<br>Psique · C.G. Jung</div>
   <div class="meta-sep"></div>
-  <div class="tipo-label">Tipo atual</div>
+  <div class="tipo-label">Função inferior</div>
   <span class="tipo-fn" id="typeFnName">—</span>
   <div id="attitudeToggle" class="attitude-toggle">introvertido</div>
-  <div class="tipo-avatar" id="typeAvatar"></div>
 </div>
 
-<!-- Mobile tipo indicator (compact, bottom-left) -->
+<!-- Mobile state indicator (compact, bottom-left) -->
 <div class="tipo-mobile">
   <span class="tm-fn" id="typeFnNameMobile">—</span>
   <span id="attitudeToggleMobile" class="attitude-toggle">I</span>
@@ -367,15 +237,7 @@
 
 <button class="reset-btn" id="resetBtn">↺ Restaurar</button>
 
-<section class="types-showcase" aria-label="Os oito tipos psicológicos">
-  <div class="types-head">
-    <h2>Os Oito Tipos Psicológicos</h2>
-    <span>avatares de exemplo</span>
-  </div>
-  <div class="explorer-types" id="explorerTypes"></div>
-</section>
-
-<!-- Legend + explorer button (desktop bottom-left) -->
+<!-- Legend (desktop bottom-left) -->
 <div class="legend">
   <div class="row"><span class="dot" style="background:#5a1e10"></span><span>sentimento · água</span></div>
   <div class="row"><span class="dot" style="background:#8a5745"></span><span>sensação · terra</span></div>
@@ -426,7 +288,6 @@
     <text id="lblExtro" class="label-inside" text-anchor="middle" data-attitude-idx="1">extroversão</text>
 
     <g id="arrowsGroup"></g>
-    <g id="rolesGroup"></g>
     <g id="selfGroup">
       <circle id="selfRing2" fill="none" stroke="rgba(90,30,16,0.10)" stroke-width="0.5"/>
       <circle id="selfRing1" fill="none" stroke="rgba(90,30,16,0.18)" stroke-width="0.7"/>
@@ -441,51 +302,28 @@
 // ─────────────────────────────────────────────
 const FUNCTION_TONES = ['#5a1e10','#8a5745','#c09b72','#eadfce'];
 
-const FUNCTIONS = [
-  { id:'sentimento', label:'sentimento', angle:-Math.PI/2,                    side:'top',    pair:2, color:FUNCTION_TONES[0], element:'água',  axis:'primary'   },
-  { id:'sensacao',   label:'sensação',   angle:-Math.PI/2 + Math.PI*0.28,     side:'right',  pair:3, color:FUNCTION_TONES[1], element:'terra', axis:'secondary' },
-  { id:'pensamento', label:'pensamento', angle: Math.PI/2,                    side:'bottom', pair:0, color:FUNCTION_TONES[2], element:'ar',    axis:'primary'   },
-  { id:'intuicao',   label:'intuição',   angle: Math.PI/2 + Math.PI*0.28,     side:'left',   pair:1, color:FUNCTION_TONES[3], element:'fogo',  axis:'secondary' },
-];
+// Three slots above center (conscious) + one below (unconscious). Exactly
+// one function occupies the bottom slot at any time; the other three are
+// always above — dragging a function across the midline swaps it with
+// whichever function currently holds the slot it crosses into.
+const SLOT_ANGLE = {
+  topL:  -Math.PI/2 - Math.PI*0.30,
+  topC:  -Math.PI/2,
+  topR:  -Math.PI/2 + Math.PI*0.30,
+  bottom: Math.PI/2,
+};
+const TOP_SLOTS = ['topL', 'topC', 'topR'];
 
-// superior, auxiliar e terciária são as três funções conscientes: cada
-// uma se move de forma independente. Só a inferior permanece fixa —
-// o ponto inconsciente que resiste à diferenciação (Jung, Tipos Psicológicos).
-const ROLE_POSITIONS = [
-  { id:'superior',  label:'superior',  angle:-Math.PI/2,                primary:true,  fixed:false },
-  { id:'inferior',  label:'inferior',  angle: Math.PI/2,                primary:true,  fixed:true  },
-  { id:'auxiliar',  label:'auxiliar',  angle:-Math.PI/2+Math.PI*0.28,  primary:false, fixed:false },
-  { id:'terciaria', label:'terciária', angle: Math.PI/2+Math.PI*0.28,  primary:false, fixed:false },
+const FUNCTIONS = [
+  { id:'sentimento', label:'sentimento', color:FUNCTION_TONES[0], element:'água',  slot:'topC'   },
+  { id:'sensacao',   label:'sensação',   color:FUNCTION_TONES[1], element:'terra', slot:'topR'   },
+  { id:'pensamento', label:'pensamento', color:FUNCTION_TONES[2], element:'ar',    slot:'bottom' },
+  { id:'intuicao',   label:'intuição',   color:FUNCTION_TONES[3], element:'fogo',  slot:'topL'   },
 ];
 
 const ATTITUDE_POSITIONS = [
   { id:'introversao', labelId:'lblIntro', angle:-Math.PI/2, pair:1 },
   { id:'extroversao', labelId:'lblExtro', angle: Math.PI/2, pair:0 },
-];
-
-// ── Jungian 8 Types ──────────────────────────────────────────────────
-// Slot angles: _T=superior(top), _A=auxiliar(upper), _B=inferior(bottom), _C=terciária(lower)
-const _T = -Math.PI/2, _B = Math.PI/2;
-const _A = -Math.PI/2 + Math.PI*0.28, _C = Math.PI/2 + Math.PI*0.28;
-
-// angles[i] = target angle for function index i  [sentimento, sensação, pensamento, intuição]
-const TYPES = [
-  { name:'Sentimento Extrovertido', att:'E', code:'SE', avatar:'Anfitrião afetivo',
-    angles:[_T, _C, _B, _A] },
-  { name:'Sentimento Introvertido', att:'I', code:'SI', avatar:'Guardião dos valores',
-    angles:[_T, _C, _B, _A] },
-  { name:'Pensamento Extrovertido', att:'E', code:'PE', avatar:'Arquiteto de sistemas',
-    angles:[_B, _A, _T, _C] },
-  { name:'Pensamento Introvertido', att:'I', code:'PI', avatar:'Filósofo analítico',
-    angles:[_B, _A, _T, _C] },
-  { name:'Sensação Extrovertida',   att:'E', code:'SeE', avatar:'Explorador concreto',
-    angles:[_C, _T, _A, _B] },
-  { name:'Sensação Introvertida',   att:'I', code:'SeI', avatar:'Guardião da memória',
-    angles:[_C, _T, _A, _B] },
-  { name:'Intuição Extrovertida',   att:'E', code:'IE', avatar:'Caçador de possibilidades',
-    angles:[_A, _B, _C, _T] },
-  { name:'Intuição Introvertida',   att:'I', code:'II', avatar:'Visionário interior',
-    angles:[_A, _B, _C, _T] },
 ];
 
 // Mutable layout — recomputed on each resize
@@ -507,17 +345,12 @@ function computeLayout() {
   const labelSubOff  = Math.round(S * 0.040);
   const fnMax        = Math.round(Math.min(cx - pad - labelOff, cy - pad - labelOff));
   const fnRest       = Math.round(fnMax * 0.76);
-  const rolePrimRest = radius + Math.round(S * 0.145);
-  const roleSecRest  = radius + Math.round(S * 0.090);
   const attRest      = Math.round(radius * 0.52);
   const attMaxD      = Math.round(radius * 0.80);
   const dotR         = Math.max(7, Math.round(S * 0.016));
-  const roleDotR     = Math.max(5, Math.round(S * 0.012));
-  const hitR         = 44; // touch-friendly hit target (px)
 
   return { W, H, S, cx, cy, radius, labelOff, labelSubOff,
-           fnMax, fnRest, rolePrimRest, roleSecRest,
-           attRest, attMaxD, dotR, roleDotR, hitR };
+           fnMax, fnRest, attRest, attMaxD, dotR };
 }
 
 function applyLayout(newL) {
@@ -531,12 +364,9 @@ function applyLayout(newL) {
 // ─────────────────────────────────────────────
 // State arrays
 // ─────────────────────────────────────────────
-const handles  = FUNCTIONS.map((f, i) => ({
-  ...f, idx:i, restX:0, restY:0, restRadius:0,
+const handles = FUNCTIONS.map(f => ({
+  ...f, restX:0, restY:0, restRadius:0,
   x:0, y:0, vx:0, vy:0, dragging:false,
-}));
-const roles = ROLE_POSITIONS.map((r, i) => ({
-  ...r, idx:i, radius:0, restX:0, restY:0, x:0, y:0, dragging:false,
 }));
 const attitudes = ATTITUDE_POSITIONS.map((a, i) => ({
   ...a, idx:i, restX:0, restY:0, x:0, y:0, vx:0, vy:0, dragging:false,
@@ -562,21 +392,19 @@ function syncAttitudeTargets({ immediate = false } = {}) {
   });
 }
 
+// Places a function at its slot's default angle/radius.
+function reslot(h, slotId) {
+  h.slot = slotId;
+  const ang = SLOT_ANGLE[slotId];
+  h.restX = CENTER.x + Math.cos(ang) * L.fnRest;
+  h.restY = CENTER.y + Math.sin(ang) * L.fnRest;
+  h.restRadius = L.fnRest;
+}
+
 function resetPositions() {
-  handles.forEach((h, i) => {
-    const f = FUNCTIONS[i];
-    h.restX = L.cx + Math.cos(f.angle) * L.fnRest;
-    h.restY = L.cy + Math.sin(f.angle) * L.fnRest;
-    h.restRadius = L.fnRest;
+  handles.forEach(h => {
+    reslot(h, h.slot);
     if (!h.dragging) { h.x = h.restX; h.y = h.restY; h.vx = 0; h.vy = 0; }
-  });
-  roles.forEach((r, i) => {
-    const rp = ROLE_POSITIONS[i];
-    const rad = rp.primary ? L.rolePrimRest : L.roleSecRest;
-    r.radius = rad;
-    r.restX = L.cx + Math.cos(rp.angle) * rad;
-    r.restY = L.cy + Math.sin(rp.angle) * rad;
-    if (!r.dragging) { r.x = r.restX; r.y = r.restY; }
   });
   syncAttitudeTargets({ immediate:true });
 }
@@ -607,7 +435,6 @@ function clientToSvg(cx, cy) {
 const axisGroup   = document.getElementById('axisGroup');
 const arrowsGroup = document.getElementById('arrowsGroup');
 const microGroup  = document.getElementById('microBlobs');
-const rolesGroup  = document.getElementById('rolesGroup');
 
 function buildAxis() {
   const m = 18;
@@ -657,35 +484,6 @@ handles.forEach((h, i) => {
   h._sector = sect;
 });
 
-roles.forEach((r, i) => {
-  const g = el('g', { class:'role-group' + (r.fixed ? ' fixed' : ''), 'data-role-idx':i });
-
-  const spoke = el('line', { class:'role-spoke' });
-  g.appendChild(spoke);
-  r._spoke = spoke;
-
-  const ring = el('circle', { class:'role-ring', r:16 });
-  g.appendChild(ring);
-  r._ring = ring;
-
-  const dot = el('circle', { class:'role-handle' + (r.fixed ? ' fixed' : ''), r:5.5, 'data-role-idx':i });
-  g.appendChild(dot);
-  r._dot = dot;
-
-  const label = el('text', { class:'role-label', 'text-anchor':'middle' }, r.label);
-  g.appendChild(label);
-  r._label = label;
-
-  const hitAttrs = { r:44, fill:'transparent', 'data-role-idx':i };
-  if (r.fixed) hitAttrs.style = 'cursor:default;pointer-events:none';
-  else         hitAttrs.cursor = 'grab';
-  const hit = el('circle', hitAttrs);
-  g.appendChild(hit);
-  r._hit = hit;
-
-  rolesGroup.appendChild(g);
-});
-
 attitudes.forEach((a, i) => {
   const label = document.getElementById(a.labelId);
   label.setAttribute('data-attitude-idx', i);
@@ -703,15 +501,14 @@ const selfRing1El = document.getElementById('selfRing1');
 const selfRing2El = document.getElementById('selfRing2');
 const selfDotEl   = document.getElementById('selfDot');
 
-// Type display elements
+// State display elements
 const typeFnNameEl      = document.getElementById('typeFnName');
 const typeFnNameMobEl   = document.getElementById('typeFnNameMobile');
 const attitudeToggleEl  = document.getElementById('attitudeToggle');
 const attToggleMobEl    = document.getElementById('attitudeToggleMobile');
-const typeAvatarEl      = document.getElementById('typeAvatar');
 
 // ─────────────────────────────────────────────
-// Type detection helpers
+// Slot helpers
 // ─────────────────────────────────────────────
 function angularDiff(a, b) {
   let d = Math.abs(a - b);
@@ -719,42 +516,28 @@ function angularDiff(a, b) {
   return d;
 }
 
-// Returns 0=superior,1=auxiliar,2=terciária,3=inferior hierarchy level for a function handle
-function rankFnToRole(h) {
-  const hAng = Math.atan2(h.y - CENTER.y, h.x - CENTER.x);
-  let minD = Infinity, bestIdx = 0;
-  roles.forEach((r, i) => {
-    const d = angularDiff(hAng, Math.atan2(r.y - CENTER.y, r.x - CENTER.x));
-    if (d < minD) { minD = d; bestIdx = i; }
-  });
-  // roles: 0=superior→level0, 1=inferior→level3, 2=auxiliar→level1, 3=terciária→level2
-  return [0, 3, 1, 2][bestIdx];
+function getInferiorFn() {
+  return handles.find(h => h.slot === 'bottom');
 }
 
-function detectSuperiorFn() {
-  const supAng = Math.atan2(roles[0].y - CENTER.y, roles[0].x - CENTER.x);
-  let minD = Infinity, best = handles[0];
-  handles.forEach(h => {
-    const d = angularDiff(Math.atan2(h.y - CENTER.y, h.x - CENTER.x), supAng);
-    if (d < minD) { minD = d; best = h; }
-  });
-  return best;
+// Swaps h into targetSlotId, moving whoever was there into h's old slot.
+function swapToSlot(h, targetSlotId) {
+  const vacated = h.slot;
+  const occupant = handles.find(o => o !== h && o.slot === targetSlotId);
+  if (occupant) { reslot(occupant, vacated); occupant._returning = true; }
+  reslot(h, targetSlotId);
+  requestAnimationFrame(returnTick);
 }
 
-function updateTypeDisplay() {
-  const sup = detectSuperiorFn();
-  const fn  = sup ? sup.label : '—';
+function updateStateDisplay() {
+  const inf = getInferiorFn();
+  const fn  = inf ? inf.label : '—';
   const att = currentAttitude === 'I' ? 'introvertido' : 'extrovertido';
   const attShort = currentAttitude;
   if (typeFnNameEl)     typeFnNameEl.textContent = fn;
   if (typeFnNameMobEl)  typeFnNameMobEl.textContent = fn;
   if (attitudeToggleEl) attitudeToggleEl.textContent = att;
   if (attToggleMobEl)   attToggleMobEl.textContent = attShort;
-  if (typeAvatarEl && sup) {
-    const si = handles.indexOf(sup);
-    const match = TYPES.find(t => t.att === currentAttitude && Math.abs(t.angles[si] - _T) < 0.5);
-    typeAvatarEl.textContent = (match && match.avatar) ? match.avatar : '';
-  }
 }
 
 function syncAttitudeFromLabels() {
@@ -762,24 +545,7 @@ function syncAttitudeFromLabels() {
   const extro = attitudes.find(a => a.id === 'extroversao');
   if (!intro || !extro) return;
   currentAttitude = intro.y <= extro.y ? 'I' : 'E';
-  updateTypeDisplay();
-}
-
-function applyType(typeIdx) {
-  const tp = TYPES[typeIdx];
-  currentAttitude = tp.att;
-  const dist = L.fnRest;
-  handles.forEach((h, i) => {
-    const ang = tp.angles[i];
-    h.restX = CENTER.x + Math.cos(ang) * dist;
-    h.restY = CENTER.y + Math.sin(ang) * dist;
-    h.restRadius = dist;
-    h._returning = true;
-  });
-  roles.forEach(r => { r.x = r.restX; r.y = r.restY; });
-  syncAttitudeTargets();
-  requestAnimationFrame(returnTick);
-  updateTypeDisplay();
+  updateStateDisplay();
 }
 
 // ─────────────────────────────────────────────
@@ -822,21 +588,15 @@ let pointerOffset = { x:0, y:0 };
 function onPointerDown(e) {
   const t = e.target;
   const ai = t.getAttribute && t.getAttribute('data-attitude-idx');
-  const ri = t.getAttribute && t.getAttribute('data-role-idx');
   const fi = t.getAttribute && t.getAttribute('data-idx');
 
   if (ai != null) {
     activeKind = 'attitude'; activeIdx = +ai;
-  } else if (ri != null) {
-    if (roles[+ri].fixed) return;
-    activeKind = 'role'; activeIdx = +ri;
   } else if (fi != null) {
     activeKind = 'function'; activeIdx = +fi;
   } else return;
 
-  const h = activeKind === 'attitude' ? attitudes[activeIdx]
-          : activeKind === 'role'     ? roles[activeIdx]
-          :                             handles[activeIdx];
+  const h = activeKind === 'attitude' ? attitudes[activeIdx] : handles[activeIdx];
   h.dragging = true;
   if (activeKind === 'attitude') h._label.classList.add('grabbing');
   else { h._dot.classList.add('grabbing'); h._dot.parentElement.classList.add('active'); }
@@ -850,50 +610,44 @@ function onPointerDown(e) {
 
 function onPointerMove(e) {
   if (activeIdx < 0) return;
-  const col = activeKind === 'attitude' ? attitudes
-            : activeKind === 'role'     ? roles
-            :                             handles;
+  const col = activeKind === 'attitude' ? attitudes : handles;
   const h = col[activeIdx];
   const p = clientToSvg(e.clientX, e.clientY);
   const nx = p.x - pointerOffset.x;
   const ny = p.y - pointerOffset.y;
 
-  const minD = activeKind === 'attitude' ? L.radius * 0.12
-             : activeKind === 'role'     ? h.radius
-             :                             L.radius + Math.round(L.S * 0.04);
-  const maxD = activeKind === 'attitude' ? L.attMaxD
-             : activeKind === 'role'     ? h.radius
-             :                             L.fnMax;
-  const outerOff = activeKind === 'function' ? L.labelOff
-                 : activeKind === 'role'     ? 30 : 0;
-  const pad = activeKind === 'function' ? 40 : 28;
-
-  // As três funções conscientes (superior, auxiliar, terciária) movem-se
-  // cada uma de forma independente — sem espelhar a oposta. A inferior
-  // permanece fixa (bloqueada já em onPointerDown).
-  if (activeKind === 'role') {
-    const pos = clampAroundCenter(nx, ny, minD, maxD, outerOff, pad);
-    h.x = pos.x; h.y = pos.y;
+  if (activeKind === 'attitude') {
+    const opp = attitudes[h.pair];
+    moveOpposedPair(h, opp, nx, ny, L.radius * 0.12, L.attMaxD, 0, 28);
     return;
   }
 
-  // Sensação fica sempre no semiciclo superior; intuição no inferior
-  let fx = nx, fy = ny;
-  const isSecondary = activeKind === 'function' && (h.id === 'sensacao' || h.id === 'intuicao');
-  if (isSecondary) {
-    const margin = 4;
-    fy = h.id === 'sensacao' ? Math.min(fy, CENTER.y - margin) : Math.max(fy, CENTER.y + margin);
+  // Exactly one function occupies the bottom (unconscious) slot; the other
+  // three always stay above center. Crossing the midline swaps places.
+  const crossingToBottom = h.slot !== 'bottom' && ny > CENTER.y;
+  const crossingToTop    = h.slot === 'bottom' && ny < CENTER.y;
+  if (crossingToBottom) {
+    swapToSlot(h, 'bottom');
+  } else if (crossingToTop) {
+    const pointerAng = Math.atan2(ny - CENTER.y, nx - CENTER.x);
+    let best = TOP_SLOTS[0], bestD = Infinity;
+    for (const s of TOP_SLOTS) {
+      const d = angularDiff(pointerAng, SLOT_ANGLE[s]);
+      if (d < bestD) { bestD = d; best = s; }
+    }
+    swapToSlot(h, best);
   }
 
-  const opp = col[h.pair];
-  if (opp) moveOpposedPair(h, opp, fx, fy, minD, maxD, outerOff, pad);
+  const margin = 4;
+  const fy = h.slot === 'bottom' ? Math.max(ny, CENTER.y + margin) : Math.min(ny, CENTER.y - margin);
+  const minD = L.radius + Math.round(L.S * 0.04), maxD = L.fnMax;
+  const pos = clampAroundCenter(nx, fy, minD, maxD, L.labelOff, 40);
+  h.x = pos.x; h.y = pos.y; h.vx = 0; h.vy = 0;
 }
 
 function onPointerUp() {
   if (activeIdx < 0) return;
-  const h = activeKind === 'attitude' ? attitudes[activeIdx]
-          : activeKind === 'role'     ? roles[activeIdx]
-          :                             handles[activeIdx];
+  const h = activeKind === 'attitude' ? attitudes[activeIdx] : handles[activeIdx];
   h.dragging = false;
   if (activeKind === 'attitude') {
     h._label.classList.remove('grabbing');
@@ -901,6 +655,7 @@ function onPointerUp() {
   } else {
     h._dot.classList.remove('grabbing');
     h._dot.parentElement.classList.remove('active');
+    updateStateDisplay();
   }
   activeIdx = -1; activeKind = '';
   requestAnimationFrame(returnTick);
@@ -916,7 +671,7 @@ window.addEventListener('pointercancel', onPointerUp);
 // ─────────────────────────────────────────────
 function returnTick() {
   let still = false;
-  for (const h of [...handles, ...roles, ...attitudes]) {
+  for (const h of [...handles, ...attitudes]) {
     if (!h._returning || h.dragging) continue;
     const dx = h.restX - h.x, dy = h.restY - h.y;
     if (Math.hypot(dx, dy) < 0.5) {
@@ -930,7 +685,7 @@ function returnTick() {
 }
 
 document.getElementById('resetBtn').addEventListener('click', () => {
-  [...handles, ...roles, ...attitudes].forEach(h => { h._returning = true; });
+  [...handles, ...attitudes].forEach(h => { h._returning = true; });
   requestAnimationFrame(returnTick);
 });
 
@@ -1028,29 +783,6 @@ function tick() {
     }
   }
 
-  for (const r of roles) {
-    const ang = Math.atan2(r.y - CENTER.y, r.x - CENTER.x);
-    const spokeStart = L.radius + 8;
-    r._spoke.setAttribute('x1', (CENTER.x + Math.cos(ang)*spokeStart).toFixed(1));
-    r._spoke.setAttribute('y1', (CENTER.y + Math.sin(ang)*spokeStart).toFixed(1));
-    r._spoke.setAttribute('x2', r.x.toFixed(1));
-    r._spoke.setAttribute('y2', r.y.toFixed(1));
-    r._dot.setAttribute('cx', r.x.toFixed(1));
-    r._dot.setAttribute('cy', r.y.toFixed(1));
-    r._hit.setAttribute('cx', r.x.toFixed(1));
-    r._hit.setAttribute('cy', r.y.toFixed(1));
-    r._ring.setAttribute('cx', r.x.toFixed(1));
-    r._ring.setAttribute('cy', r.y.toFixed(1));
-
-    const lDist = Math.max(20, L.S * 0.032);
-    const lx = r.x + Math.cos(ang)*lDist;
-    const ly = r.y + Math.sin(ang)*lDist + 3;
-    const anchor = Math.cos(ang) < -0.3 ? 'end' : Math.cos(ang) > 0.3 ? 'start' : 'middle';
-    r._label.setAttribute('x', lx.toFixed(1));
-    r._label.setAttribute('y', ly.toFixed(1));
-    r._label.setAttribute('text-anchor', anchor);
-  }
-
   const bPath = buildBlobPath(time);
   blob.setAttribute('d', bPath);
   blobHL.setAttribute('d', bPath);
@@ -1083,12 +815,9 @@ function tick() {
     a._hit.setAttribute('cy', a.y.toFixed(1));
   }
 
-  // ── Opacity by function hierarchy level ──
-  // superior=1.0, auxiliar=0.78, terciária=0.52, inferior=0.30
-  const LEVEL_OPACITY = [1.0, 0.78, 0.52, 0.30];
+  // ── Opacity: conscious (top three) vs unconscious (bottom one) ──
   handles.forEach(h => {
-    const level = rankFnToRole(h);
-    const op = LEVEL_OPACITY[level];
+    const op = h.slot === 'bottom' ? 0.34 : 1.0;
     h._group.style.opacity = op;
     h._micro.style.opacity = op;
     h._sector.style.opacity = (op * 0.94).toFixed(2);
@@ -1103,8 +832,8 @@ function tick() {
   selfRing2El.setAttribute('r', r2.toFixed(2));
   selfDotEl.setAttribute('cx', CENTER.x);   selfDotEl.setAttribute('cy', CENTER.y);
 
-  // ── Update type display (throttled — every ~30 frames) ──
-  if (Math.round(time / 16) % 30 === 0) updateTypeDisplay();
+  // ── Update state display (throttled — every ~30 frames) ──
+  if (Math.round(time / 16) % 30 === 0) updateStateDisplay();
 
   requestAnimationFrame(tick);
 }
@@ -1120,10 +849,6 @@ function onResize() {
   handles.forEach(h => {
     h._dot.setAttribute('r', L.dotR);
     h._ring.setAttribute('r', L.dotR + 13);
-  });
-  roles.forEach(r => {
-    r._dot.setAttribute('r', L.roleDotR);
-    r._ring.setAttribute('r', L.roleDotR + 11);
   });
 
   // Rebuild axis
@@ -1148,44 +873,18 @@ window.addEventListener('keydown', e => {
   if (e.key === 'r' || e.key === 'R') document.getElementById('resetBtn').click();
 });
 
-function superiorIndexForType(tp) {
-  return tp.angles.findIndex(a => Math.abs(a - _T) < 0.01);
-}
-
-// ── First-screen type avatars ──
-(function buildExplorer() {
-  const grid = document.getElementById('explorerTypes');
-  TYPES.forEach((tp, i) => {
-    const card = document.createElement('button');
-    card.className = 'type-card';
-    card.type = 'button';
-    card.setAttribute('aria-label', tp.name);
-    const tone = FUNCTION_TONES[superiorIndexForType(tp)] || FUNCTION_TONES[0];
-    card.style.setProperty('--avatar-tone', tone);
-    card.innerHTML =
-      `<span class="type-avatar" aria-hidden="true">${tp.code}</span>` +
-      `<span>` +
-        `<span class="tc-name">${tp.name}</span>` +
-        `<span class="tc-att">${tp.att === 'I' ? 'introvertido' : 'extrovertido'}</span>` +
-        `<span class="tc-avatar">${tp.avatar}</span>` +
-      `</span>`;
-    card.addEventListener('click', () => applyType(i));
-    grid.appendChild(card);
-  });
-})();
-
 // ── Attitude toggles (desktop + mobile) ──
 function toggleAttitude() {
   currentAttitude = currentAttitude === 'I' ? 'E' : 'I';
   syncAttitudeTargets();
   requestAnimationFrame(returnTick);
-  updateTypeDisplay();
+  updateStateDisplay();
 }
 attitudeToggleEl  && attitudeToggleEl.addEventListener('click', toggleAttitude);
 attToggleMobEl    && attToggleMobEl.addEventListener('click', toggleAttitude);
 
-// ── Initial type display ──
-updateTypeDisplay();
+// ── Initial state display ──
+updateStateDisplay();
 </script>
 </body>
 </html>
