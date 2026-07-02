@@ -51,19 +51,18 @@
   }
 
   /* ── SVG text (vmin = scales with shorter viewport dimension) ── */
+  /* fill comes from each function's own color, set inline in JS */
   .label-fn {
     font-family: 'Cormorant Garamond', serif;
     font-weight: 500;
     font-style: italic;
     font-size: 3.8vmin;
-    fill: var(--ink);
   }
   .label-sub {
     font-family: 'JetBrains Mono', monospace;
     font-size: 1.8vmin;
     letter-spacing: 0.16em;
     text-transform: uppercase;
-    fill: var(--ink-soft);
   }
   .label-inside {
     font-family: 'Cormorant Garamond', serif;
@@ -84,8 +83,7 @@
 
   .handle {
     fill: var(--paper);
-    stroke: var(--ink);
-    stroke-width: 1.6;
+    stroke-width: 1.6; /* stroke color comes from each function's own color, set inline in JS */
     cursor: grab;
     transition: fill 160ms ease;
     filter: drop-shadow(0 0 5px var(--paper));
@@ -239,10 +237,10 @@
 
 <!-- Legend (desktop bottom-left) -->
 <div class="legend">
-  <div class="row"><span class="dot" style="background:#5a1e10"></span><span>sentimento · água</span></div>
-  <div class="row"><span class="dot" style="background:#8a5745"></span><span>sensação · terra</span></div>
-  <div class="row"><span class="dot" style="background:#c09b72"></span><span>pensamento · ar</span></div>
-  <div class="row"><span class="dot" style="background:#eadfce;border:1px solid rgba(90,30,16,0.32)"></span><span>intuição · fogo</span></div>
+  <div class="row"><span class="dot" style="background:#3f5b6b"></span><span>sentimento · água</span></div>
+  <div class="row"><span class="dot" style="background:#6b7645"></span><span>sensação · terra</span></div>
+  <div class="row"><span class="dot" style="background:#c9a25a"></span><span>pensamento · ar</span></div>
+  <div class="row"><span class="dot" style="background:#a8432e"></span><span>intuição · fogo</span></div>
 </div>
 
 <div class="credit">
@@ -300,7 +298,8 @@
 // ─────────────────────────────────────────────
 // Layout — all sizes relative to shorter viewport dim
 // ─────────────────────────────────────────────
-const FUNCTION_TONES = ['#5a1e10','#8a5745','#c09b72','#eadfce'];
+// Cada função tem sua própria cor, ligada ao elemento associado a ela.
+const FUNCTION_TONES = ['#3f5b6b','#6b7645','#c9a25a','#a8432e']; // água, terra, ar, fogo
 
 // Three slots above center (conscious) + one below (unconscious). Exactly
 // one function occupies the bottom slot at any time; the other three are
