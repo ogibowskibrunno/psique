@@ -448,11 +448,14 @@ const FUNCTIONS = [
   { id:'intuicao',   label:'intuição',   angle: Math.PI/2 + Math.PI*0.28,     side:'left',   pair:1, color:FUNCTION_TONES[3], element:'fogo',  axis:'secondary' },
 ];
 
+// superior, auxiliar e terciária são as três funções conscientes: cada
+// uma se move de forma independente. Só a inferior permanece fixa —
+// o ponto inconsciente que resiste à diferenciação (Jung, Tipos Psicológicos).
 const ROLE_POSITIONS = [
-  { id:'superior',  label:'superior',  angle:-Math.PI/2,                pair:1, fixed:true  },
-  { id:'inferior',  label:'inferior',  angle: Math.PI/2,                pair:0, fixed:true  },
-  { id:'auxiliar',  label:'auxiliar',  angle:-Math.PI/2+Math.PI*0.28,  pair:3, fixed:false },
-  { id:'terciaria', label:'terciária', angle: Math.PI/2+Math.PI*0.28,  pair:2, fixed:false },
+  { id:'superior',  label:'superior',  angle:-Math.PI/2,                primary:true,  fixed:false },
+  { id:'inferior',  label:'inferior',  angle: Math.PI/2,                primary:true,  fixed:true  },
+  { id:'auxiliar',  label:'auxiliar',  angle:-Math.PI/2+Math.PI*0.28,  primary:false, fixed:false },
+  { id:'terciaria', label:'terciária', angle: Math.PI/2+Math.PI*0.28,  primary:false, fixed:false },
 ];
 
 const ATTITUDE_POSITIONS = [
@@ -569,7 +572,7 @@ function resetPositions() {
   });
   roles.forEach((r, i) => {
     const rp = ROLE_POSITIONS[i];
-    const rad = rp.fixed ? L.rolePrimRest : L.roleSecRest;
+    const rad = rp.primary ? L.rolePrimRest : L.roleSecRest;
     r.radius = rad;
     r.restX = L.cx + Math.cos(rp.angle) * rad;
     r.restY = L.cy + Math.sin(rp.angle) * rad;
@@ -865,19 +868,21 @@ function onPointerMove(e) {
                  : activeKind === 'role'     ? 30 : 0;
   const pad = activeKind === 'function' ? 40 : 28;
 
-  // Auxiliar fica sempre no semiciclo superior; terciária no inferior
+  // As três funções conscientes (superior, auxiliar, terciária) movem-se
+  // cada uma de forma independente — sem espelhar a oposta. A inferior
+  // permanece fixa (bloqueada já em onPointerDown).
+  if (activeKind === 'role') {
+    const pos = clampAroundCenter(nx, ny, minD, maxD, outerOff, pad);
+    h.x = pos.x; h.y = pos.y;
+    return;
+  }
+
+  // Sensação fica sempre no semiciclo superior; intuição no inferior
   let fx = nx, fy = ny;
-  const isSecondary = activeKind === 'function'
-    ? (h.id === 'sensacao' || h.id === 'intuicao')
-    : activeKind === 'role'
-    ? (h.id === 'auxiliar' || h.id === 'terciaria')
-    : false;
+  const isSecondary = activeKind === 'function' && (h.id === 'sensacao' || h.id === 'intuicao');
   if (isSecondary) {
     const margin = 4;
-    if (h.id === 'sensacao' || h.id === 'auxiliar')
-      fy = Math.min(fy, CENTER.y - margin);   // topo
-    else
-      fy = Math.max(fy, CENTER.y + margin);   // baixo
+    fy = h.id === 'sensacao' ? Math.min(fy, CENTER.y - margin) : Math.max(fy, CENTER.y + margin);
   }
 
   const opp = col[h.pair];
