@@ -335,6 +335,14 @@ const SLOT_ANGLE = {
 };
 const TOP_SLOTS = ['topL', 'topC', 'topR'];
 
+// Development hierarchy lives in the slot, not the function: whoever
+// occupies the top center is the superior — reaching farthest and reading
+// largest. The two side slots are progressively less developed (and
+// distinct from each other); the inferior barely emerges from the
+// unconscious.
+const SLOT_REST  = { topC: 1.00, topR: 0.76, topL: 0.58, bottom: 0.44 };
+const SLOT_SCALE = { topC: 1.32, topR: 1.00, topL: 0.84, bottom: 0.72 };
+
 const FUNCTIONS = [
   { id:'sentimento', label:'sentimento', color:FUNCTION_TONES[0], slot:'topC'   },
   { id:'sensacao',   label:'sensação',   color:FUNCTION_TONES[1], slot:'topR'   },
@@ -414,13 +422,14 @@ function syncAttitudeTargets({ immediate = false } = {}) {
   });
 }
 
-// Places a function at its slot's default angle/radius.
+// Places a function at its slot's default angle and development radius.
 function reslot(h, slotId) {
   h.slot = slotId;
-  const ang = SLOT_ANGLE[slotId];
-  h.restX = CENTER.x + Math.cos(ang) * L.fnRest;
-  h.restY = CENTER.y + Math.sin(ang) * L.fnRest;
-  h.restRadius = L.fnRest;
+  const ang  = SLOT_ANGLE[slotId];
+  const dist = L.fnRest * SLOT_REST[slotId];
+  h.restX = CENTER.x + Math.cos(ang) * dist;
+  h.restY = CENTER.y + Math.sin(ang) * dist;
+  h.restRadius = dist;
 }
 
 function resetPositions() {
@@ -471,6 +480,7 @@ function buildAxis() {
 handles.forEach((h, i) => {
   h._phase = i * 1.9;  // unique idle-drift phase per function
   h._op = 1;           // smoothed opacity (conscious/unconscious fade)
+  h._scale = SLOT_SCALE[h.slot]; // smoothed size by development level
   const g = el('g', { class:'handle-group', 'data-idx':i });
   const line = el('line', { class:'arrow-line', 'marker-end':'url(#arr)' });
   g.appendChild(line);
@@ -794,6 +804,12 @@ function tick() {
     const wob = (REDUCED_MOTION || h.dragging || h._returning) ? 0 : Math.min(3.5, L.S * 0.0045);
     const hx = h.x + Math.sin(time * 0.00058 + h._phase) * wob;
     const hy = h.y + Math.cos(time * 0.00047 + h._phase * 1.6) * wob;
+
+    // Size follows the slot's development level (eased on slot change)
+    h._scale += (SLOT_SCALE[h.slot] - h._scale) * 0.08;
+    h._dot.setAttribute('r', (L.dotR * h._scale).toFixed(2));
+    h._ring.setAttribute('r', (L.dotR * h._scale + 13).toFixed(1));
+    h._lblMain.style.fontSize = (3.8 * h._scale).toFixed(2) + 'vmin';
 
     const ang   = Math.atan2(hy - CENTER.y, hx - CENTER.x);
     const startR = L.radius - 6;
