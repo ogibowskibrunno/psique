@@ -4,6 +4,11 @@
 <meta charset="utf-8">
 <title>A Psique — Esquema Junguiano</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Esquema interativo da psique segundo C.G. Jung — quatro funções psíquicas, três conscientes e uma inconsciente, em movimento.">
+<meta name="theme-color" content="#f4efe6">
+<meta property="og:title" content="A Psique — Esquema Junguiano">
+<meta property="og:description" content="Esquema interativo da psique segundo C.G. Jung.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='12' fill='%235a1e10'/%3E%3Ccircle cx='13' cy='12' r='4' fill='%23f4efe6' opacity='.55'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -189,6 +194,47 @@
   .tipo-mobile .attitude-toggle { font-size: clamp(7px, 1.8vmin, 10px); padding: 1px 6px; }
   @media (min-width: 700px) { .tipo-mobile { display: none; } }
 
+  /* ── Grain overlay — breaks digital flatness, matches the paper feel ── */
+  .grain {
+    position: fixed; inset: 0; z-index: 40;
+    pointer-events: none; opacity: 0.045;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* ── Staggered entry — overlay UI cascades in ── */
+  @keyframes fadeUp { from { opacity: 0; translate: 0 10px; } to { opacity: 1; translate: 0 0; } }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .title-block { animation: fadeUp 700ms cubic-bezier(.2,.7,.2,1) 120ms both; }
+  .meta        { animation: fadeUp 700ms cubic-bezier(.2,.7,.2,1) 320ms both; }
+  .tipo-mobile { animation: fadeIn 700ms ease 480ms both; }
+  .credit      { animation: fadeIn 700ms ease 560ms both; }
+  .shuffle-btn { animation: fadeIn 700ms ease 680ms both; }
+  .label-inside { animation: fadeIn 900ms ease 950ms both; }
+
+  /* ── Physical feedback on the function handles ── */
+  .handle {
+    transform-box: fill-box; transform-origin: center;
+    transition: fill 160ms ease, transform 220ms cubic-bezier(.2,.7,.2,1);
+  }
+  .handle-group:hover .handle { transform: scale(1.3); }
+  .handle.grabbing { transform: scale(1.14); }
+
+  /* ── Shuffle button: pressed state + glyph spin ── */
+  .shuffle-btn:active { scale: 0.95; }
+  .shuffle-btn .glyph { display: inline-block; }
+  @keyframes spinGlyph { to { transform: rotate(-360deg); } }
+  .shuffle-btn.spinning .glyph { animation: spinGlyph 550ms cubic-bezier(.4,.1,.2,1); }
+
+  /* ── Keyboard focus ── */
+  .shuffle-btn:focus-visible,
+  .attitude-toggle:focus-visible {
+    outline: 2px solid var(--ink); outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+
 </style>
 </head>
 <body>
@@ -215,7 +261,9 @@
   <h1>A Psique</h1>
 </div>
 
-<button class="shuffle-btn" id="shuffleBtn">↺</button>
+<button class="shuffle-btn" id="shuffleBtn" aria-label="Sortear nova disposição"><span class="glyph">↺</span></button>
+
+<div class="grain" aria-hidden="true"></div>
 
 <div class="credit">
   São Paulo · MMXXVI<br>Estudo nº 04<br>
@@ -304,6 +352,8 @@ const CENTER = { x:0, y:0 };
 const VB     = { w:0, h:0 };
 let L = {}; // layout constants
 let currentAttitude = 'I'; // 'I' = introvertido, 'E' = extrovertido
+const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+let INTRO = REDUCED_MOTION ? 1 : 0; // blob scale-in progress on first load
 
 function computeLayout() {
   const W = window.innerWidth;
@@ -419,6 +469,8 @@ function buildAxis() {
 }
 
 handles.forEach((h, i) => {
+  h._phase = i * 1.9;  // unique idle-drift phase per function
+  h._op = 1;           // smoothed opacity (conscious/unconscious fade)
   const g = el('g', { class:'handle-group', 'data-idx':i });
   const line = el('line', { class:'arrow-line', 'marker-end':'url(#arr)' });
   g.appendChild(line);
@@ -495,7 +547,6 @@ function swapToSlot(h, targetSlotId) {
   const occupant = handles.find(o => o !== h && o.slot === targetSlotId);
   if (occupant) { reslot(occupant, vacated); occupant._returning = true; }
   reslot(h, targetSlotId);
-  requestAnimationFrame(returnTick);
 }
 
 function updateStateDisplay() {
@@ -621,13 +672,13 @@ function onPointerUp() {
   if (activeKind === 'attitude') {
     h._label.classList.remove('grabbing');
     syncAttitudeFromLabels();
+    syncAttitudeTargets(); // labels spring back to the poles of the detected attitude
   } else {
     h._dot.classList.remove('grabbing');
     h._dot.parentElement.classList.remove('active');
     updateStateDisplay();
   }
   activeIdx = -1; activeKind = '';
-  requestAnimationFrame(returnTick);
 }
 
 SVG.addEventListener('pointerdown', onPointerDown);
@@ -635,23 +686,8 @@ window.addEventListener('pointermove', onPointerMove);
 window.addEventListener('pointerup', onPointerUp);
 window.addEventListener('pointercancel', onPointerUp);
 
-// ─────────────────────────────────────────────
-// Spring return
-// ─────────────────────────────────────────────
-function returnTick() {
-  let still = false;
-  for (const h of [...handles, ...attitudes]) {
-    if (!h._returning || h.dragging) continue;
-    const dx = h.restX - h.x, dy = h.restY - h.y;
-    if (Math.hypot(dx, dy) < 0.5) {
-      h.x = h.restX; h.y = h.restY; h.vx = 0; h.vy = 0;
-      h._returning = false; continue;
-    }
-    still = true;
-    h.x += dx * 0.18; h.y += dy * 0.18;
-  }
-  if (still) requestAnimationFrame(returnTick);
-}
+// Returning elements are integrated as damped springs inside tick(),
+// giving a natural overshoot instead of a flat linear ease.
 
 // Picks a random slot arrangement (which function is inferior, which
 // three are conscious) and a random attitude — a fresh typical disposition.
@@ -664,12 +700,15 @@ function shuffledSlots() {
   return slots;
 }
 
-document.getElementById('shuffleBtn').addEventListener('click', () => {
+const shuffleBtnEl = document.getElementById('shuffleBtn');
+shuffleBtnEl.addEventListener('click', () => {
+  shuffleBtnEl.classList.remove('spinning');
+  void shuffleBtnEl.offsetWidth; // restart the glyph spin
+  shuffleBtnEl.classList.add('spinning');
   const slots = shuffledSlots();
   handles.forEach((h, i) => { reslot(h, slots[i]); h._returning = true; });
   currentAttitude = Math.random() < 0.5 ? 'I' : 'E';
   syncAttitudeTargets();
-  requestAnimationFrame(returnTick);
   updateStateDisplay();
 });
 
@@ -699,7 +738,7 @@ function radiusAt(theta, time) {
     const falloff = Math.exp(-(d*d) / (2*sigma*sigma));
     r += pull * 0.95 * falloff;
   }
-  return r;
+  return r * INTRO;
 }
 
 function buildBlobPath(time) {
@@ -723,30 +762,55 @@ function buildBlobPath(time) {
 // ─────────────────────────────────────────────
 // Tick loop
 // ─────────────────────────────────────────────
+const SPRING_K = 0.055, SPRING_DAMP = 0.82;
+
 function tick() {
   const time = performance.now() - t0;
 
-  for (const h of handles) {
-    if (!h.dragging) { h.vx *= 0.9; h.vy *= 0.9; h.x += h.vx; h.y += h.vy; }
+  // Blob scale-in on first load
+  if (INTRO < 1) {
+    const p = Math.min(1, time / 900);
+    INTRO = 1 - Math.pow(1 - p, 3);
+  }
+
+  // Damped-spring integration: returning elements ease home with a
+  // slight overshoot; everything else just bleeds residual velocity.
+  for (const h of [...handles, ...attitudes]) {
+    if (h.dragging) continue;
+    if (h._returning) {
+      h.vx = (h.vx + (h.restX - h.x) * SPRING_K) * SPRING_DAMP;
+      h.vy = (h.vy + (h.restY - h.y) * SPRING_K) * SPRING_DAMP;
+      h.x += h.vx; h.y += h.vy;
+      if (Math.hypot(h.restX - h.x, h.restY - h.y) < 0.4 && Math.hypot(h.vx, h.vy) < 0.4) {
+        h.x = h.restX; h.y = h.restY; h.vx = 0; h.vy = 0; h._returning = false;
+      }
+    } else {
+      h.vx *= 0.9; h.vy *= 0.9; h.x += h.vx; h.y += h.vy;
+    }
   }
 
   for (const h of handles) {
-    const ang   = Math.atan2(h.y - CENTER.y, h.x - CENTER.x);
+    // Idle drift: each function breathes around its rest point
+    const wob = (REDUCED_MOTION || h.dragging || h._returning) ? 0 : Math.min(3.5, L.S * 0.0045);
+    const hx = h.x + Math.sin(time * 0.00058 + h._phase) * wob;
+    const hy = h.y + Math.cos(time * 0.00047 + h._phase * 1.6) * wob;
+
+    const ang   = Math.atan2(hy - CENTER.y, hx - CENTER.x);
     const startR = L.radius - 6;
     h._line.setAttribute('x1', (CENTER.x + Math.cos(ang)*startR).toFixed(1));
     h._line.setAttribute('y1', (CENTER.y + Math.sin(ang)*startR).toFixed(1));
-    h._line.setAttribute('x2', h.x.toFixed(1));
-    h._line.setAttribute('y2', h.y.toFixed(1));
+    h._line.setAttribute('x2', hx.toFixed(1));
+    h._line.setAttribute('y2', hy.toFixed(1));
 
-    h._dot.setAttribute('cx', h.x.toFixed(1));
-    h._dot.setAttribute('cy', h.y.toFixed(1));
-    h._hit.setAttribute('cx', h.x.toFixed(1));
-    h._hit.setAttribute('cy', h.y.toFixed(1));
-    h._ring.setAttribute('cx', h.x.toFixed(1));
-    h._ring.setAttribute('cy', h.y.toFixed(1));
+    h._dot.setAttribute('cx', hx.toFixed(1));
+    h._dot.setAttribute('cy', hy.toFixed(1));
+    h._hit.setAttribute('cx', hx.toFixed(1));
+    h._hit.setAttribute('cy', hy.toFixed(1));
+    h._ring.setAttribute('cx', hx.toFixed(1));
+    h._ring.setAttribute('cy', hy.toFixed(1));
 
-    const lx = h.x + Math.cos(ang) * L.labelOff;
-    const ly = h.y + Math.sin(ang) * L.labelOff;
+    const lx = hx + Math.cos(ang) * L.labelOff;
+    const ly = hy + Math.sin(ang) * L.labelOff;
     const anchor = Math.cos(ang) < -0.24 ? 'end' : Math.cos(ang) > 0.24 ? 'start' : 'middle';
     h._lblMain.setAttribute('text-anchor', anchor);
     h._lblMain.setAttribute('x', lx.toFixed(1));
@@ -799,16 +863,19 @@ function tick() {
   }
 
   // ── Opacity: conscious (top three) vs unconscious (bottom one) ──
+  // Eased toward the target so crossing the midline fades, not snaps.
   handles.forEach(h => {
-    const op = h.slot === 'bottom' ? 0.34 : 1.0;
+    const target = h._introPending ? 0 : (h.slot === 'bottom' ? 0.34 : 1.0);
+    h._op += (target - h._op) * 0.08;
+    const op = h._op.toFixed(3);
     h._group.style.opacity = op;
     h._micro.style.opacity = op;
-    h._sector.style.opacity = (op * 0.94).toFixed(2);
+    h._sector.style.opacity = (h._op * 0.94).toFixed(3);
   });
 
   // ── Self / Transcendent Function center ──
-  const r1 = L.radius * (0.22 + 0.06 * Math.sin(time * 0.00080));
-  const r2 = L.radius * (0.36 + 0.09 * Math.sin(time * 0.00050 + 1.2));
+  const r1 = INTRO * L.radius * (0.22 + 0.06 * Math.sin(time * 0.00080));
+  const r2 = INTRO * L.radius * (0.36 + 0.09 * Math.sin(time * 0.00050 + 1.2));
   selfRing1El.setAttribute('cx', CENTER.x); selfRing1El.setAttribute('cy', CENTER.y);
   selfRing1El.setAttribute('r', r1.toFixed(2));
   selfRing2El.setAttribute('cx', CENTER.x); selfRing2El.setAttribute('cy', CENTER.y);
@@ -848,6 +915,17 @@ applyLayout(computeLayout());
 SVG.setAttribute('viewBox', `0 0 ${VB.w} ${VB.h}`);
 resetPositions();
 buildAxis();
+
+// Entry: the four functions emerge from the center — differentiating out
+// of the unconscious — one after the other, on springs.
+if (!REDUCED_MOTION) {
+  handles.forEach((h, i) => {
+    h.x = CENTER.x; h.y = CENTER.y; h.vx = 0; h.vy = 0;
+    h._op = 0; h._introPending = true;
+    setTimeout(() => { h._introPending = false; h._returning = true; }, 380 + i * 140);
+  });
+}
+
 tick();
 
 window.addEventListener('resize', onResize);
@@ -860,7 +938,6 @@ window.addEventListener('keydown', e => {
 function toggleAttitude() {
   currentAttitude = currentAttitude === 'I' ? 'E' : 'I';
   syncAttitudeTargets();
-  requestAnimationFrame(returnTick);
   updateStateDisplay();
 }
 attitudeToggleEl  && attitudeToggleEl.addEventListener('click', toggleAttitude);
