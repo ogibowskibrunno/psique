@@ -58,12 +58,6 @@
     font-style: italic;
     font-size: 3.8vmin;
   }
-  .label-sub {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 1.8vmin;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-  }
   .label-inside {
     font-family: 'Cormorant Garamond', serif;
     font-style: italic;
@@ -130,17 +124,6 @@
     letter-spacing: 0.01em; line-height: 1;
   }
 
-  .legend {
-    position: fixed; bottom: 16px; left: 16px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 1.8vmin; letter-spacing: 0.11em;
-    text-transform: uppercase; color: var(--ink-soft);
-    line-height: 1.9; z-index: 10;
-    display: none; /* hidden on mobile */
-  }
-  .legend .row { display: flex; gap: 8px; align-items: center; }
-  .legend .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ink); flex: none; }
-
   .credit {
     position: fixed; bottom: 60px; right: 8px;
     font-family: 'JetBrains Mono', monospace;
@@ -151,7 +134,7 @@
   }
   .credit a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--ink-faint); }
 
-  .reset-btn {
+  .shuffle-btn {
     position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
     font-family: 'JetBrains Mono', monospace;
     font-size: 2.2vmin; letter-spacing: 0.22em;
@@ -160,14 +143,13 @@
     padding: 8px 18px; cursor: pointer; z-index: 10;
     transition: all 160ms ease; white-space: nowrap;
   }
-  .reset-btn:hover { color: var(--paper); background: var(--ink); border-color: var(--ink); }
+  .shuffle-btn:hover { color: var(--paper); background: var(--ink); border-color: var(--ink); }
 
   /* ── Desktop enhancements ── */
   @media (min-width: 700px) {
     .meta { display: block; }
-    .legend { display: block; }
     .credit { bottom: 16px; right: 16px; font-size: 1.6vmin; letter-spacing: 0.16em; line-height: 1.8; }
-    .reset-btn {
+    .shuffle-btn {
       bottom: auto; left: auto; transform: none;
       top: 50%; right: 28px; transform: translateY(-50%);
     }
@@ -233,15 +215,7 @@
   <h1>A Psique</h1>
 </div>
 
-<button class="reset-btn" id="resetBtn">↺ Restaurar</button>
-
-<!-- Legend (desktop bottom-left) -->
-<div class="legend">
-  <div class="row"><span class="dot" style="background:#3f5b6b"></span><span>sentimento · água</span></div>
-  <div class="row"><span class="dot" style="background:#6b7645"></span><span>sensação · terra</span></div>
-  <div class="row"><span class="dot" style="background:#c9a25a"></span><span>pensamento · ar</span></div>
-  <div class="row"><span class="dot" style="background:#a8432e"></span><span>intuição · fogo</span></div>
-</div>
+<button class="shuffle-btn" id="shuffleBtn">↺</button>
 
 <div class="credit">
   São Paulo · MMXXVI<br>Estudo nº 04<br>
@@ -314,10 +288,10 @@ const SLOT_ANGLE = {
 const TOP_SLOTS = ['topL', 'topC', 'topR'];
 
 const FUNCTIONS = [
-  { id:'sentimento', label:'sentimento', color:FUNCTION_TONES[0], element:'água',  slot:'topC'   },
-  { id:'sensacao',   label:'sensação',   color:FUNCTION_TONES[1], element:'terra', slot:'topR'   },
-  { id:'pensamento', label:'pensamento', color:FUNCTION_TONES[2], element:'ar',    slot:'bottom' },
-  { id:'intuicao',   label:'intuição',   color:FUNCTION_TONES[3], element:'fogo',  slot:'topL'   },
+  { id:'sentimento', label:'sentimento', color:FUNCTION_TONES[0], slot:'topC'   },
+  { id:'sensacao',   label:'sensação',   color:FUNCTION_TONES[1], slot:'topR'   },
+  { id:'pensamento', label:'pensamento', color:FUNCTION_TONES[2], slot:'bottom' },
+  { id:'intuicao',   label:'intuição',   color:FUNCTION_TONES[3], slot:'topL'   },
 ];
 
 const ATTITUDE_POSITIONS = [
@@ -341,14 +315,13 @@ function computeLayout() {
 
   const radius       = Math.round(S * 0.090);
   const labelOff     = Math.round(S * 0.075);
-  const labelSubOff  = Math.round(S * 0.040);
   const fnMax        = Math.round(Math.min(cx - pad - labelOff, cy - pad - labelOff));
   const fnRest       = Math.round(fnMax * 0.76);
   const attRest      = Math.round(radius * 0.52);
   const attMaxD      = Math.round(radius * 0.80);
   const dotR         = Math.max(7, Math.round(S * 0.016));
 
-  return { W, H, S, cx, cy, radius, labelOff, labelSubOff,
+  return { W, H, S, cx, cy, radius, labelOff,
            fnMax, fnRest, attRest, attMaxD, dotR };
 }
 
@@ -452,11 +425,8 @@ handles.forEach((h, i) => {
   h._line = line;
 
   const lblMain = el('text', { class:'label-fn', 'text-anchor':'middle', fill:h.color }, h.label);
-  const lblSub  = el('text', { class:'label-sub', 'text-anchor':'middle', fill:h.color, opacity:0.88 }, '· ' + h.element + ' ·');
   g.appendChild(lblMain);
-  g.appendChild(lblSub);
   h._lblMain = lblMain;
-  h._lblSub  = lblSub;
 
   const ring = el('circle', { class:'handle-ring', r:22 });
   g.appendChild(ring);
@@ -666,7 +636,7 @@ window.addEventListener('pointerup', onPointerUp);
 window.addEventListener('pointercancel', onPointerUp);
 
 // ─────────────────────────────────────────────
-// Spring return (on reset)
+// Spring return
 // ─────────────────────────────────────────────
 function returnTick() {
   let still = false;
@@ -683,9 +653,24 @@ function returnTick() {
   if (still) requestAnimationFrame(returnTick);
 }
 
-document.getElementById('resetBtn').addEventListener('click', () => {
-  [...handles, ...attitudes].forEach(h => { h._returning = true; });
+// Picks a random slot arrangement (which function is inferior, which
+// three are conscious) and a random attitude — a fresh typical disposition.
+function shuffledSlots() {
+  const slots = [...TOP_SLOTS, 'bottom'];
+  for (let i = slots.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [slots[i], slots[j]] = [slots[j], slots[i]];
+  }
+  return slots;
+}
+
+document.getElementById('shuffleBtn').addEventListener('click', () => {
+  const slots = shuffledSlots();
+  handles.forEach((h, i) => { reslot(h, slots[i]); h._returning = true; });
+  currentAttitude = Math.random() < 0.5 ? 'I' : 'E';
+  syncAttitudeTargets();
   requestAnimationFrame(returnTick);
+  updateStateDisplay();
 });
 
 // ─────────────────────────────────────────────
@@ -764,11 +749,8 @@ function tick() {
     const ly = h.y + Math.sin(ang) * L.labelOff;
     const anchor = Math.cos(ang) < -0.24 ? 'end' : Math.cos(ang) > 0.24 ? 'start' : 'middle';
     h._lblMain.setAttribute('text-anchor', anchor);
-    h._lblSub.setAttribute('text-anchor', anchor);
     h._lblMain.setAttribute('x', lx.toFixed(1));
     h._lblMain.setAttribute('y', ly.toFixed(1));
-    h._lblSub.setAttribute('x', lx.toFixed(1));
-    h._lblSub.setAttribute('y', (ly + L.labelSubOff).toFixed(1));
 
     const dist = Math.hypot(h.x - CENTER.x, h.y - CENTER.y);
     const pull = Math.max(0, dist - h.restRadius);
@@ -870,8 +852,8 @@ tick();
 
 window.addEventListener('resize', onResize);
 window.addEventListener('keydown', e => {
-  if (e.key === 'Escape') document.getElementById('resetBtn').click();
-  if (e.key === 'r' || e.key === 'R') document.getElementById('resetBtn').click();
+  if (e.key === 'Escape') document.getElementById('shuffleBtn').click();
+  if (e.key === 'r' || e.key === 'R') document.getElementById('shuffleBtn').click();
 });
 
 // ── Attitude toggles (desktop + mobile) ──
