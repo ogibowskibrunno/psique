@@ -325,8 +325,10 @@ const FUNCTION_TONES = ['#3f5b6b','#6b7645','#c9a25a','#a8432e']; // água, terr
 
 // Three slots above center (conscious) + one below (unconscious). Exactly
 // one function occupies the bottom slot at any time; the other three are
-// always above — dragging a function across the midline swaps it with
-// whichever function currently holds the slot it crosses into.
+// always above. Opposing pairs (sentimento↔pensamento, sensação↔intuição)
+// always face each other across an axis: one pair holds the vertical
+// axis (topC↔bottom), the other holds the sides (topL↔topR). Any move
+// rearranges the four functions to preserve this.
 const SLOT_ANGLE = {
   topL:  -Math.PI/2 - Math.PI*0.30,
   topC:  -Math.PI/2,
@@ -334,6 +336,7 @@ const SLOT_ANGLE = {
   bottom: Math.PI/2,
 };
 const TOP_SLOTS = ['topL', 'topC', 'topR'];
+const OPPOSITE_SLOT = { topC:'bottom', bottom:'topC', topL:'topR', topR:'topL' };
 
 // Development hierarchy lives in the slot, not the function: whoever
 // occupies the top center is the superior — reaching farthest and reading
@@ -343,11 +346,13 @@ const TOP_SLOTS = ['topL', 'topC', 'topR'];
 const SLOT_REST  = { topC: 1.00, topR: 0.76, topL: 0.58, bottom: 0.44 };
 const SLOT_SCALE = { topC: 1.32, topR: 1.00, topL: 0.84, bottom: 0.72 };
 
+// pair: index of the opposing function (racionais: sentimento↔pensamento;
+// irracionais: sensação↔intuição)
 const FUNCTIONS = [
-  { id:'sentimento', label:'sentimento', color:FUNCTION_TONES[0], slot:'topC'   },
-  { id:'sensacao',   label:'sensação',   color:FUNCTION_TONES[1], slot:'topR'   },
-  { id:'pensamento', label:'pensamento', color:FUNCTION_TONES[2], slot:'bottom' },
-  { id:'intuicao',   label:'intuição',   color:FUNCTION_TONES[3], slot:'topL'   },
+  { id:'sentimento', label:'sentimento', color:FUNCTION_TONES[0], slot:'topC',   pair:2 },
+  { id:'sensacao',   label:'sensação',   color:FUNCTION_TONES[1], slot:'topR',   pair:3 },
+  { id:'pensamento', label:'pensamento', color:FUNCTION_TONES[2], slot:'bottom', pair:0 },
+  { id:'intuicao',   label:'intuição',   color:FUNCTION_TONES[3], slot:'topL',   pair:1 },
 ];
 
 const ATTITUDE_POSITIONS = [
@@ -551,12 +556,26 @@ function getInferiorFn() {
   return handles.find(h => h.slot === 'bottom');
 }
 
-// Swaps h into targetSlotId, moving whoever was there into h's old slot.
-function swapToSlot(h, targetSlotId) {
-  const vacated = h.slot;
-  const occupant = handles.find(o => o !== h && o.slot === targetSlotId);
-  if (occupant) { reslot(occupant, vacated); occupant._returning = true; }
-  reslot(h, targetSlotId);
+// Moves h into targetSlot while keeping opposing pairs on opposing slots.
+// If the target belongs to h's own partner, the pair swaps within its
+// axis; otherwise the two pairs trade axes: the partner takes the slot
+// opposite the target, and the displaced pair inherits the freed axis.
+function placePair(h, targetSlot) {
+  if (h.slot === targetSlot) return;
+  const partner  = handles[h.pair];
+  const occupant = handles.find(o => o.slot === targetSlot);
+  const oldSlot = h.slot, oldPartnerSlot = partner.slot;
+
+  if (occupant === partner) {
+    reslot(h, targetSlot);
+    reslot(partner, oldSlot); partner._returning = true;
+    return;
+  }
+  const occPartner = handles[occupant.pair];
+  reslot(h, targetSlot);
+  reslot(partner, OPPOSITE_SLOT[targetSlot]); partner._returning = true;
+  reslot(occupant, oldSlot);                  occupant._returning = true;
+  reslot(occPartner, oldPartnerSlot);         occPartner._returning = true;
 }
 
 function updateStateDisplay() {
@@ -653,19 +672,25 @@ function onPointerMove(e) {
   }
 
   // Exactly one function occupies the bottom (unconscious) slot; the other
-  // three always stay above center. Crossing the midline swaps places.
+  // three always stay above center. Crossing the midline — or sliding
+  // along the top arc past a slot boundary — rearranges the pairs.
   const crossingToBottom = h.slot !== 'bottom' && ny > CENTER.y;
   const crossingToTop    = h.slot === 'bottom' && ny < CENTER.y;
   if (crossingToBottom) {
-    swapToSlot(h, 'bottom');
-  } else if (crossingToTop) {
+    placePair(h, 'bottom');
+  } else {
     const pointerAng = Math.atan2(ny - CENTER.y, nx - CENTER.x);
     let best = TOP_SLOTS[0], bestD = Infinity;
     for (const s of TOP_SLOTS) {
       const d = angularDiff(pointerAng, SLOT_ANGLE[s]);
       if (d < bestD) { bestD = d; best = s; }
     }
-    swapToSlot(h, best);
+    if (crossingToTop) {
+      placePair(h, best);
+    } else if (best !== h.slot &&
+               angularDiff(pointerAng, SLOT_ANGLE[h.slot]) - bestD > 0.09) {
+      placePair(h, best); // hysteresis avoids churn at slot boundaries
+    }
   }
 
   const margin = 4;
@@ -699,14 +724,17 @@ window.addEventListener('pointercancel', onPointerUp);
 // Returning elements are integrated as damped springs inside tick(),
 // giving a natural overshoot instead of a flat linear ease.
 
-// Picks a random slot arrangement (which function is inferior, which
-// three are conscious) and a random attitude — a fresh typical disposition.
+// Picks a random valid arrangement — opposing pairs stay on opposing
+// slots: one pair takes the vertical axis (superior/inferior), the other
+// takes the sides. With the random attitude, these are the eight types.
 function shuffledSlots() {
-  const slots = [...TOP_SLOTS, 'bottom'];
-  for (let i = slots.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [slots[i], slots[j]] = [slots[j], slots[i]];
-  }
+  const slots = new Array(4);
+  const vertical = Math.random() < 0.5 ? [0, 2] : [1, 3]; // rational or irrational pair on the axis
+  const sides    = vertical[0] === 0 ? [1, 3] : [0, 2];
+  if (Math.random() < 0.5) { slots[vertical[0]] = 'topC';  slots[vertical[1]] = 'bottom'; }
+  else                     { slots[vertical[0]] = 'bottom'; slots[vertical[1]] = 'topC'; }
+  if (Math.random() < 0.5) { slots[sides[0]] = 'topL'; slots[sides[1]] = 'topR'; }
+  else                     { slots[sides[0]] = 'topR'; slots[sides[1]] = 'topL'; }
   return slots;
 }
 
