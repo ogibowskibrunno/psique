@@ -345,6 +345,10 @@ const OPPOSITE_SLOT = { topC:'bottom', bottom:'topC', topL:'topR', topR:'topL' }
 // unconscious.
 const SLOT_REST  = { topC: 1.00, topR: 0.76, topL: 0.58, bottom: 0.44 };
 const SLOT_SCALE = { topC: 1.32, topR: 1.00, topL: 0.84, bottom: 0.72 };
+// Max drag reach as a fraction of fnMax. Only the superior can stretch to
+// the very edge; the auxiliaries are capped short of it (less developed),
+// and the inferior barely extends past its resting point.
+const SLOT_REACH = { topC: 1.00, topR: 0.66, topL: 0.52, bottom: 0.40 };
 
 // pair: index of the opposing function (racionais: sentimento↔pensamento;
 // irracionais: sensação↔intuição)
@@ -695,7 +699,10 @@ function onPointerMove(e) {
 
   const margin = 4;
   const fy = h.slot === 'bottom' ? Math.max(ny, CENTER.y + margin) : Math.min(ny, CENTER.y - margin);
-  const minD = L.radius + Math.round(L.S * 0.04), maxD = L.fnMax;
+  // Reach is capped by development level: superior stretches to fnMax,
+  // auxiliaries fall short of it, inferior barely extends.
+  const minD = L.radius + Math.round(L.S * 0.04);
+  const maxD = Math.max(minD, Math.round(L.fnMax * SLOT_REACH[h.slot]));
   const pos = clampAroundCenter(nx, fy, minD, maxD, L.labelOff, 40);
   h.x = pos.x; h.y = pos.y; h.vx = 0; h.vy = 0;
 }
