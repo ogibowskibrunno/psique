@@ -1,0 +1,25 @@
+{
+  "appId": "com.brunnorossetti.psique",
+  "appName": "A Psique",
+  "webDir": "www",
+  "backgroundColor": "#f4efe6",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#f4efe6"
+  },
+  "android": {
+    "backgroundColor": "#f4efe6"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "backgroundColor": "#f4efe6",
+      "launchAutoHide": true,
+      "launchFadeOutDuration": 400,
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "LIGHT",
+      "backgroundColor": "#f4efe6"
+    }
+  }
+}

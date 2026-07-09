@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- papel -->
+  <rect width="1024" height="1024" fill="#f4efe6"/>
+  <!-- pontilhado sutil do papel -->
+  <defs>
+    <pattern id="dots" width="46" height="46" patternUnits="userSpaceOnUse">
+      <circle cx="23" cy="23" r="2.5" fill="rgba(90,30,16,0.10)"/>
+    </pattern>
+    <clipPath id="blob">
+      <path d="M 512 178
+               C 640 170, 764 250, 792 388
+               C 818 516, 780 640, 688 726
+               C 600 808, 452 838, 344 774
+               C 240 712, 196 596, 214 470
+               C 232 342, 330 190, 512 178 Z"/>
+    </clipPath>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#dots)"/>
+  <!-- blob com os quatro setores (água, terra, ar, fogo) -->
+  <g clip-path="url(#blob)">
+    <rect width="1024" height="1024" fill="#c9a25a"/>
+    <path d="M 512 512 L 100 100 L 512 20 L 924 100 Z" fill="#3f5b6b"/>
+    <path d="M 512 512 L 924 100 L 1004 512 L 924 924 Z" fill="#6b7645"/>
+    <path d="M 512 512 L 100 100 L 20 512 L 100 924 Z" fill="#a8432e"/>
+  </g>
+  <!-- contorno e centro (o Si-mesmo) -->
+  <path d="M 512 178
+           C 640 170, 764 250, 792 388
+           C 818 516, 780 640, 688 726
+           C 600 808, 452 838, 344 774
+           C 240 712, 196 596, 214 470
+           C 232 342, 330 190, 512 178 Z"
+        fill="none" stroke="rgba(90,30,16,0.35)" stroke-width="6"/>
+  <circle cx="512" cy="512" r="74" fill="#f4efe6"/>
+  <circle cx="512" cy="512" r="26" fill="#5a1e10"/>
+  <circle cx="512" cy="512" r="50" fill="none" stroke="rgba(90,30,16,0.35)" stroke-width="5"/>
+</svg>
