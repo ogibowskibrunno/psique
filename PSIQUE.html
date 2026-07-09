@@ -3,16 +3,30 @@
 <head>
 <meta charset="utf-8">
 <title>A Psique</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="A Psique — quatro funções psíquicas, três conscientes e uma inconsciente, em movimento.">
 <meta name="theme-color" content="#f4efe6">
 <meta property="og:title" content="A Psique">
 <meta property="og:description" content="A Psique — quatro funções psíquicas, três conscientes e uma inconsciente, em movimento.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='12' fill='%235a1e10'/%3E%3Ccircle cx='13' cy='12' r='4' fill='%23f4efe6' opacity='.55'/%3E%3C/svg%3E">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
+  /* ── Local variable fonts — the page works fully offline ── */
+  @font-face {
+    font-family: 'Cormorant Garamond';
+    font-style: normal; font-weight: 300 700; font-display: swap;
+    src: url('fonts/cormorant-garamond.woff2') format('woff2');
+  }
+  @font-face {
+    font-family: 'Cormorant Garamond';
+    font-style: italic; font-weight: 300 700; font-display: swap;
+    src: url('fonts/cormorant-garamond-italic.woff2') format('woff2');
+  }
+  @font-face {
+    font-family: 'JetBrains Mono';
+    font-style: normal; font-weight: 100 800; font-display: swap;
+    src: url('fonts/jetbrains-mono.woff2') format('woff2');
+  }
+
   :root {
     --paper: #f4efe6;
     --paper-2: #ede6d8;
@@ -100,9 +114,13 @@
   .liquid-fill { fill: url(#liquidGrad); opacity: 0.86; }
   .sector-fill { opacity: 0.94; }
 
-  /* ── Overlay UI (mobile-first base) ── */
+  /* ── Overlay UI (mobile-first base) ──
+     max(px, env(safe-area-inset-*)) keeps fixed elements clear of the
+     notch/home indicator when running as an app (viewport-fit=cover). */
   .meta {
-    position: fixed; top: 14px; left: 16px;
+    position: fixed;
+    top: max(14px, env(safe-area-inset-top));
+    left: max(16px, env(safe-area-inset-left));
     font-family: 'JetBrains Mono', monospace;
     font-size: 2vmin; letter-spacing: 0.13em;
     text-transform: uppercase; color: var(--ink-soft);
@@ -110,7 +128,9 @@
     display: none; /* hidden on mobile */
   }
   .title-block {
-    position: fixed; top: 14px; right: 14px;
+    position: fixed;
+    top: max(14px, env(safe-area-inset-top));
+    right: max(14px, env(safe-area-inset-right));
     text-align: right; z-index: 10;
   }
   .title-block h1 {
@@ -121,7 +141,9 @@
   }
 
   .credit {
-    position: fixed; bottom: 60px; right: 8px;
+    position: fixed;
+    bottom: max(60px, calc(44px + env(safe-area-inset-bottom)));
+    right: max(8px, env(safe-area-inset-right));
     font-family: 'JetBrains Mono', monospace;
     font-size: clamp(8px, 2.5vmin, 12px); letter-spacing: 0.10em;
     text-transform: uppercase; color: var(--ink-soft);
@@ -131,7 +153,9 @@
   .credit a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--ink-faint); }
 
   .shuffle-btn {
-    position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+    position: fixed;
+    bottom: max(16px, env(safe-area-inset-bottom));
+    left: 50%; transform: translateX(-50%);
     font-family: 'JetBrains Mono', monospace;
     font-size: 2.2vmin; letter-spacing: 0.22em;
     text-transform: uppercase; color: var(--ink-soft);
@@ -144,12 +168,12 @@
   /* ── Desktop enhancements ── */
   @media (min-width: 700px) {
     .meta { display: block; }
-    .credit { bottom: 16px; right: 16px; font-size: 1.6vmin; letter-spacing: 0.16em; line-height: 1.8; }
+    .credit { bottom: max(16px, env(safe-area-inset-bottom)); right: max(16px, env(safe-area-inset-right)); font-size: 1.6vmin; letter-spacing: 0.16em; line-height: 1.8; }
     .shuffle-btn {
       bottom: auto; left: auto; transform: none;
-      top: 50%; right: 28px; transform: translateY(-50%);
+      top: 50%; right: max(28px, env(safe-area-inset-right)); transform: translateY(-50%);
     }
-    .title-block { top: 28px; right: 32px; }
+    .title-block { top: max(28px, env(safe-area-inset-top)); right: max(32px, env(safe-area-inset-right)); }
   }
 
   /* ── State info inside .meta (desktop) ── */
@@ -172,7 +196,9 @@
 
   /* ── Mobile state indicator (bottom-left, small) ── */
   .tipo-mobile {
-    position: fixed; bottom: 108px; left: 8px;
+    position: fixed;
+    bottom: max(108px, calc(92px + env(safe-area-inset-bottom)));
+    left: max(8px, env(safe-area-inset-left));
     font-family: 'JetBrains Mono', monospace;
     font-size: clamp(7px, 2vmin, 11px); letter-spacing: 0.12em;
     text-transform: uppercase; color: var(--ink-soft); z-index: 10;
@@ -310,40 +336,45 @@
 // Cada função tem sua própria cor, ligada ao elemento associado a ela.
 const FUNCTION_TONES = ['#3f5b6b','#6b7645','#c9a25a','#a8432e']; // água, terra, ar, fogo
 
-// Three slots above center (conscious) + one below (unconscious). Exactly
-// one function occupies the bottom slot at any time; the other three are
-// always above. Opposing pairs (sentimento↔pensamento, sensação↔intuição)
-// always face each other across an axis: one pair holds the vertical
-// axis (topC↔bottom), the other holds the sides (topL↔topR). Any move
-// rearranges the four functions to preserve this.
+// Six positions on the circle, four occupied at any time. The vertical
+// axis is rigid: whoever holds topC is the superior (conscious only) and
+// its direct opposite holds bottom (unconscious only) — they never cross
+// the midline. The lateral (auxiliary) pair keeps a looser opposition:
+// one function per side column (left/right), but each may sit above
+// (conscious) or below (unconscious) the midline independently.
 const SLOT_ANGLE = {
   topL:  -Math.PI/2 - Math.PI*0.30,
   topC:  -Math.PI/2,
   topR:  -Math.PI/2 + Math.PI*0.30,
+  botR:   Math.PI/2 - Math.PI*0.30,
   bottom: Math.PI/2,
+  botL:   Math.PI/2 + Math.PI*0.30,
 };
-const TOP_SLOTS = ['topL', 'topC', 'topR'];
-const OPPOSITE_SLOT = { topC:'bottom', bottom:'topC', topL:'topR', topR:'topL' };
+const TOP_SLOTS   = ['topL', 'topC', 'topR'];
+const BOT_SLOTS   = ['botL', 'bottom', 'botR'];
+const MIRROR_LR   = { topL:'topR', topR:'topL', botL:'botR', botR:'botL' };
+const CROSS_LEVEL = { topL:'botL', botL:'topL', topR:'botR', botR:'topR' };
+function isLateral(slot) { return slot !== 'topC' && slot !== 'bottom'; }
 
-// Development hierarchy lives in the slot, not the function: whoever
-// occupies the top center is the superior — reaching farthest and reading
-// largest. The two side slots are progressively less developed (and
-// distinct from each other); the inferior barely emerges from the
-// unconscious.
-const SLOT_REST  = { topC: 1.00, topR: 0.76, topL: 0.58, bottom: 0.44 };
-const SLOT_SCALE = { topC: 1.32, topR: 1.00, topL: 0.84, bottom: 0.72 };
-// Max drag reach as a fraction of fnMax. Only the superior can stretch to
-// the very edge; the auxiliaries are capped short of it (less developed),
-// and the inferior barely extends past its resting point.
-const SLOT_REACH = { topC: 1.00, topR: 0.66, topL: 0.52, bottom: 0.40 };
+// Development hierarchy lives in the slot: the superior reaches farthest
+// and reads largest; conscious auxiliaries next (right column slightly
+// ahead); unconscious auxiliaries sink further; the inferior barely emerges.
+const SLOT_REST  = { topC: 1.00, topR: 0.76, topL: 0.58, botR: 0.52, botL: 0.48, bottom: 0.44 };
+const SLOT_SCALE = { topC: 1.32, topR: 1.00, topL: 0.84, botR: 0.80, botL: 0.76, bottom: 0.72 };
+// Max drag reach as a fraction of fnMax. Only the superior stretches to
+// the very edge; everyone else is capped progressively shorter.
+const SLOT_REACH = { topC: 1.00, topR: 0.66, topL: 0.52, botR: 0.48, botL: 0.44, bottom: 0.40 };
+// Conscious slots read solid; unconscious ones fade toward the inferior.
+const SLOT_OPACITY = { topC: 1.0, topR: 1.0, topL: 1.0, botR: 0.52, botL: 0.48, bottom: 0.34 };
 
 // pair: index of the opposing function (racionais: sentimento↔pensamento;
-// irracionais: sensação↔intuição)
+// irracionais: sensação↔intuição). Initial state shows the transit: one
+// auxiliary conscious (topR), the other partly unconscious (botL).
 const FUNCTIONS = [
   { id:'sentimento', label:'sentimento', color:FUNCTION_TONES[0], slot:'topC',   pair:2 },
   { id:'sensacao',   label:'sensação',   color:FUNCTION_TONES[1], slot:'topR',   pair:3 },
   { id:'pensamento', label:'pensamento', color:FUNCTION_TONES[2], slot:'bottom', pair:0 },
-  { id:'intuicao',   label:'intuição',   color:FUNCTION_TONES[3], slot:'topL',   pair:1 },
+  { id:'intuicao',   label:'intuição',   color:FUNCTION_TONES[3], slot:'botL',   pair:1 },
 ];
 
 const ATTITUDE_POSITIONS = [
@@ -547,26 +578,41 @@ function getInferiorFn() {
   return handles.find(h => h.slot === 'bottom');
 }
 
-// Moves h into targetSlot while keeping opposing pairs on opposing slots.
-// If the target belongs to h's own partner, the pair swaps within its
-// axis; otherwise the two pairs trade axes: the partner takes the slot
-// opposite the target, and the displaced pair inherits the freed axis.
+// Moves h into targetSlot preserving the oppositions: the vertical pair
+// (topC↔bottom) opposes directly; the lateral pair opposes by column
+// (left/right), each side free to sit above or below the midline.
 function placePair(h, targetSlot) {
   if (h.slot === targetSlot) return;
   const partner  = handles[h.pair];
   const occupant = handles.find(o => o.slot === targetSlot);
   const oldSlot = h.slot, oldPartnerSlot = partner.slot;
 
+  if (!occupant) {
+    // empty lateral slot: h takes it; its partner mirrors to the opposite
+    // column at its own level, keeping the sides opposed. (If the partner
+    // is on the vertical axis this move is invalid — leave it in place.)
+    reslot(h, targetSlot);
+    const mirror = MIRROR_LR[partner.slot];
+    if (mirror) { reslot(partner, mirror); partner._returning = true; }
+    document.dispatchEvent(new CustomEvent('psique:rearrange'));
+    return;
+  }
   if (occupant === partner) {
     reslot(h, targetSlot);
     reslot(partner, oldSlot); partner._returning = true;
+    document.dispatchEvent(new CustomEvent('psique:rearrange'));
     return;
   }
+  // Two pairs trade axes: h's partner takes the slot the occupant's
+  // partner leaves (direct opposite when the target is topC/bottom,
+  // opposite column when the target is lateral).
   const occPartner = handles[occupant.pair];
+  const occPartnerSlot = occPartner.slot;
   reslot(h, targetSlot);
-  reslot(partner, OPPOSITE_SLOT[targetSlot]); partner._returning = true;
-  reslot(occupant, oldSlot);                  occupant._returning = true;
-  reslot(occPartner, oldPartnerSlot);         occPartner._returning = true;
+  reslot(partner, occPartnerSlot);    partner._returning = true;
+  reslot(occupant, oldSlot);          occupant._returning = true;
+  reslot(occPartner, oldPartnerSlot); occPartner._returning = true;
+  document.dispatchEvent(new CustomEvent('psique:rearrange'));
 }
 
 function updateStateDisplay() {
@@ -662,32 +708,46 @@ function onPointerMove(e) {
     return;
   }
 
-  // Exactly one function occupies the bottom (unconscious) slot; the other
-  // three always stay above center. Crossing the midline — or sliding
-  // along the top arc past a slot boundary — rearranges the pairs.
-  const crossingToBottom = h.slot !== 'bottom' && ny > CENTER.y;
-  const crossingToTop    = h.slot === 'bottom' && ny < CENTER.y;
-  if (crossingToBottom) {
-    placePair(h, 'bottom');
-  } else {
-    const pointerAng = Math.atan2(ny - CENTER.y, nx - CENTER.x);
-    let best = TOP_SLOTS[0], bestD = Infinity;
-    for (const s of TOP_SLOTS) {
-      const d = angularDiff(pointerAng, SLOT_ANGLE[s]);
-      if (d < bestD) { bestD = d; best = s; }
-    }
-    if (crossingToTop) {
-      placePair(h, best);
-    } else if (best !== h.slot &&
-               angularDiff(pointerAng, SLOT_ANGLE[h.slot]) - bestD > 0.09) {
-      placePair(h, best); // hysteresis avoids churn at slot boundaries
+  // Vertical axis is rigid: the superior never crosses below, the
+  // inferior never above. Laterals cross freely within their column;
+  // sliding along an arc trades roles with whoever holds the target.
+  if (isLateral(h.slot)) {
+    if (h.slot.startsWith('top') && ny > CENTER.y + 6) {
+      reslot(h, CROSS_LEVEL[h.slot]);
+      document.dispatchEvent(new CustomEvent('psique:rearrange'));
+    } else if (h.slot.startsWith('bot') && ny < CENTER.y - 6) {
+      reslot(h, CROSS_LEVEL[h.slot]);
+      document.dispatchEvent(new CustomEvent('psique:rearrange'));
     }
   }
 
+  // Vertical clamp for the rigid axis (also anchors the arc detection)
   const margin = 4;
-  const fy = h.slot === 'bottom' ? Math.max(ny, CENTER.y + margin) : Math.min(ny, CENTER.y - margin);
+  let fy = ny;
+  if (h.slot === 'topC')   fy = Math.min(ny, CENTER.y - margin);
+  if (h.slot === 'bottom') fy = Math.max(ny, CENTER.y + margin);
+
+  // Arc trades only when the pointer is meaningfully away from the
+  // center — jammed against the midline the angle is just noise.
+  if (Math.hypot(nx - CENTER.x, fy - CENTER.y) > L.radius) {
+    const half = h.slot.startsWith('bot') ? BOT_SLOTS : TOP_SLOTS;
+    const pointerAng = Math.atan2(fy - CENTER.y, nx - CENTER.x);
+    let best = null, bestD = Infinity;
+    for (const s of half) {
+      if (s === h.slot) continue;
+      const d = angularDiff(pointerAng, SLOT_ANGLE[s]);
+      if (d < bestD) { bestD = d; best = s; }
+    }
+    if (best && angularDiff(pointerAng, SLOT_ANGLE[h.slot]) - bestD > 0.09) {
+      const occupied = handles.some(o => o.slot === best);
+      // superior/inferior only trade with occupied slots; a lateral may
+      // also take an empty lateral slot (its partner mirrors columns)
+      if (occupied || (isLateral(h.slot) && isLateral(best))) placePair(h, best);
+    }
+  }
+
   // Reach is capped by development level: superior stretches to fnMax,
-  // auxiliaries fall short of it, inferior barely extends.
+  // everyone else progressively shorter.
   const minD = L.radius + Math.round(L.S * 0.04);
   const maxD = Math.max(minD, Math.round(L.fnMax * SLOT_REACH[h.slot]));
   const pos = clampAroundCenter(nx, fy, minD, maxD, L.labelOff, 40);
@@ -718,17 +778,19 @@ window.addEventListener('pointercancel', onPointerUp);
 // Returning elements are integrated as damped springs inside tick(),
 // giving a natural overshoot instead of a flat linear ease.
 
-// Picks a random valid arrangement — opposing pairs stay on opposing
-// slots: one pair takes the vertical axis (superior/inferior), the other
-// takes the sides. With the random attitude, these are the eight types.
+// Random valid arrangement: one pair takes the rigid vertical axis, the
+// other takes the side columns — each auxiliary independently conscious
+// (top) or unconscious (bottom). 32 valid states with the attitude.
 function shuffledSlots() {
   const slots = new Array(4);
   const vertical = Math.random() < 0.5 ? [0, 2] : [1, 3]; // rational or irrational pair on the axis
   const sides    = vertical[0] === 0 ? [1, 3] : [0, 2];
   if (Math.random() < 0.5) { slots[vertical[0]] = 'topC';  slots[vertical[1]] = 'bottom'; }
   else                     { slots[vertical[0]] = 'bottom'; slots[vertical[1]] = 'topC'; }
-  if (Math.random() < 0.5) { slots[sides[0]] = 'topL'; slots[sides[1]] = 'topR'; }
-  else                     { slots[sides[0]] = 'topR'; slots[sides[1]] = 'topL'; }
+  const sideL = Math.random() < 0.5 ? sides[0] : sides[1];
+  const sideR = sideL === sides[0] ? sides[1] : sides[0];
+  slots[sideL] = (Math.random() < 0.5 ? 'top' : 'bot') + 'L';
+  slots[sideR] = (Math.random() < 0.5 ? 'top' : 'bot') + 'R';
   return slots;
 }
 
@@ -742,6 +804,7 @@ shuffleBtnEl.addEventListener('click', () => {
   currentAttitude = Math.random() < 0.5 ? 'I' : 'E';
   syncAttitudeTargets();
   updateStateDisplay();
+  document.dispatchEvent(new CustomEvent('psique:shuffle'));
 });
 
 // ─────────────────────────────────────────────
@@ -900,10 +963,10 @@ function tick() {
     a._hit.setAttribute('cy', a.y.toFixed(1));
   }
 
-  // ── Opacity: conscious (top three) vs unconscious (bottom one) ──
+  // ── Opacity by slot: conscious solid, unconscious fading down ──
   // Eased toward the target so crossing the midline fades, not snaps.
   handles.forEach(h => {
-    const target = h._introPending ? 0 : (h.slot === 'bottom' ? 0.34 : 1.0);
+    const target = h._introPending ? 0 : SLOT_OPACITY[h.slot];
     h._op += (target - h._op) * 0.08;
     const op = h._op.toFixed(3);
     h._group.style.opacity = op;
