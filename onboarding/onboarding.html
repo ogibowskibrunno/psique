@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>A Psique — Descobrir</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4efe6">
+<style>
+  /* ── Fontes locais (mesmas do esquema) ── */
+  @font-face { font-family:'Cormorant Garamond'; font-style:normal; font-weight:300 700; font-display:swap; src:url('../fonts/cormorant-garamond.woff2') format('woff2'); }
+  @font-face { font-family:'Cormorant Garamond'; font-style:italic; font-weight:300 700; font-display:swap; src:url('../fonts/cormorant-garamond-italic.woff2') format('woff2'); }
+  @font-face { font-family:'JetBrains Mono'; font-style:normal; font-weight:100 800; font-display:swap; src:url('../fonts/jetbrains-mono.woff2') format('woff2'); }
+
+  :root {
+    --paper:#f4efe6; --paper-2:#ede6d8; --ink:#5a1e10; --ink-soft:#7d5d4e;
+    --ink-faint:rgba(90,30,16,0.32); --dot:rgba(90,30,16,0.12);
+    --c-sentimento:#3f5b6b; --c-sensacao:#6b7645; --c-pensamento:#c9a25a; --c-intuicao:#a8432e;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html, body { height:100%; }
+  body {
+    background:var(--paper); color:var(--ink);
+    font-family:'Cormorant Garamond', Georgia, serif;
+    -webkit-font-smoothing:antialiased;
+    background-image:radial-gradient(circle at 1px 1px, var(--dot) 1px, transparent 1px);
+    background-size:18px 18px;
+    min-height:100dvh; overflow-x:hidden;
+  }
+  .grain {
+    position:fixed; inset:0; z-index:40; pointer-events:none; opacity:0.045;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* ── Progresso ── */
+  .progress {
+    position:fixed; top:0; left:0; right:0; height:2px; z-index:30;
+    background:transparent;
+  }
+  .progress .bar { height:100%; width:0; background:var(--ink); transition:width 320ms cubic-bezier(.2,.7,.2,1); }
+  .topbar {
+    position:fixed; top:0; left:0; right:0; z-index:20;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:max(14px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 10px max(16px,env(safe-area-inset-left));
+    font-family:'JetBrains Mono', monospace; font-size:11px; letter-spacing:0.16em;
+    text-transform:uppercase; color:var(--ink-soft);
+  }
+  .topbar .back { cursor:pointer; border:none; background:none; color:var(--ink-soft); font:inherit; letter-spacing:0.16em; padding:6px 4px; opacity:0; pointer-events:none; transition:opacity 200ms; }
+  .topbar .back.show { opacity:1; pointer-events:auto; }
+  .topbar .back:hover { color:var(--ink); }
+
+  /* ── Palco ── */
+  .stage {
+    min-height:100dvh; display:grid; place-items:center;
+    padding:72px max(20px,env(safe-area-inset-left)) max(28px,calc(20px+env(safe-area-inset-bottom))) max(20px,env(safe-area-inset-right));
+  }
+  .card {
+    width:100%; max-width:620px; margin:0 auto;
+    animation:enter 460ms cubic-bezier(.2,.7,.2,1) both;
+  }
+  @keyframes enter { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
+
+  .kicker { font-family:'JetBrains Mono', monospace; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:18px; }
+  .prompt { font-size:clamp(24px,5.2vw,34px); font-style:italic; font-weight:500; line-height:1.18; letter-spacing:0.005em; text-wrap:balance; }
+  .lead { font-size:clamp(18px,4.4vw,23px); line-height:1.45; color:var(--ink); }
+  .lead + .lead { margin-top:16px; }
+  .muted { color:var(--ink-soft); }
+
+  /* ── Botões primários ── */
+  .btn {
+    font-family:'JetBrains Mono', monospace; font-size:13px; letter-spacing:0.2em; text-transform:uppercase;
+    color:var(--ink-soft); background:var(--paper); border:1px solid var(--ink-faint);
+    padding:14px 26px; cursor:pointer; transition:all 160ms ease; white-space:nowrap;
+  }
+  .btn:hover { color:var(--paper); background:var(--ink); border-color:var(--ink); }
+  .btn:active { scale:0.97; }
+  .btn-row { margin-top:34px; display:flex; gap:14px; align-items:center; flex-wrap:wrap; }
+
+  /* ── bipolar5 ── */
+  .poles { margin-top:26px; }
+  .pole {
+    border:1px solid var(--ink-faint); padding:15px 17px; line-height:1.34; font-size:clamp(16px,3.9vw,19px);
+    background:rgba(237,230,216,0.5); position:relative;
+    border-left:3px solid var(--tone,var(--ink-faint));
+  }
+  .pole .tag { font-family:'JetBrains Mono', monospace; font-size:9px; letter-spacing:0.14em; text-transform:uppercase; color:var(--tone,var(--ink-soft)); display:block; margin-bottom:5px; opacity:0.8; }
+  .scale5 { display:flex; align-items:center; justify-content:center; gap:min(6vw,34px); padding:20px 6px; }
+  .scale5 button {
+    border:1.5px solid var(--ink-faint); background:var(--paper); border-radius:50%;
+    cursor:pointer; padding:0; transition:all 180ms cubic-bezier(.2,.7,.2,1);
+  }
+  .scale5 button:hover { border-color:var(--ink); }
+  .scale5 button.sel { background:var(--ink); border-color:var(--ink); transform:scale(1.12); }
+  /* tamanhos graduados só na escala bipolar: extremos maiores, centro menor */
+  .poles .scale5 button[data-v="-2"], .poles .scale5 button[data-v="2"] { width:34px; height:34px; }
+  .poles .scale5 button[data-v="-1"], .poles .scale5 button[data-v="1"] { width:27px; height:27px; }
+  .poles .scale5 button[data-v="0"] { width:20px; height:20px; }
+  /* likert: escala de concordância simétrica, pontos uniformes */
+  .likert .scale5 button { width:28px; height:28px; }
+  .scale-ends { display:flex; justify-content:space-between; font-family:'JetBrains Mono', monospace; font-size:9.5px; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-soft); opacity:0.7; margin-top:-4px; }
+
+  /* ── likert5 ── */
+  .likert { margin-top:30px; }
+  .likert .scale5 { gap:min(7vw,40px); }
+  .likert-ends { display:flex; justify-content:space-between; font-family:'JetBrains Mono', monospace; font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-soft); opacity:0.75; }
+
+  /* ── scenario ── */
+  .options { margin-top:24px; display:flex; flex-direction:column; gap:11px; }
+  .option {
+    text-align:left; font:inherit; font-size:clamp(16px,3.9vw,19px); line-height:1.34;
+    border:1px solid var(--ink-faint); background:rgba(237,230,216,0.5);
+    padding:15px 17px; cursor:pointer; transition:all 160ms ease; color:var(--ink);
+  }
+  .option:hover { background:var(--ink); color:var(--paper); border-color:var(--ink); }
+  .option.sel { background:var(--ink); color:var(--paper); border-color:var(--ink); }
+
+  /* ── resultado ── */
+  .result-fn { font-style:italic; font-weight:600; }
+  .rline { font-size:clamp(19px,4.6vw,24px); line-height:1.5; margin-top:6px; }
+  .rlabel { font-family:'JetBrains Mono', monospace; font-size:10px; letter-spacing:0.18em; text-transform:uppercase; color:var(--ink-soft); }
+  .swatch { display:inline-block; width:10px; height:10px; border-radius:50%; vertical-align:baseline; margin-right:7px; }
+  .disclaimer { margin-top:26px; font-size:16px; line-height:1.5; color:var(--ink-soft); font-style:italic; }
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+<div class="progress"><div class="bar" id="bar"></div></div>
+<div class="topbar">
+  <button class="back" id="backBtn">← voltar</button>
+  <span id="counter"></span>
+</div>
+<main class="stage"><div class="card" id="card"></div></main>
+
+<script src="instrument.js"></script>
+<script>
+// ─────────────────────────────────────────────
+// Estado do fluxo
+// ─────────────────────────────────────────────
+const FN_LABEL = { pensamento:'pensamento', sentimento:'sentimento', sensacao:'sensação', intuicao:'intuição' };
+const FN_COLOR = { pensamento:'var(--c-pensamento)', sentimento:'var(--c-sentimento)', sensacao:'var(--c-sensacao)', intuicao:'var(--c-intuicao)' };
+const TOTAL = QUESTIONS.length;
+
+const state = {
+  step: 'intro1',   // intro1 | intro2 | q | result
+  qi: 0,            // índice da pergunta
+  answers: {},
+  optionOrder: {},  // ordem embaralhada por scenario (estável)
+};
+
+// restaura progresso, se houver
+try {
+  const saved = JSON.parse(localStorage.getItem('psique.onboarding.progress') || 'null');
+  if (saved && saved.answers) Object.assign(state, saved);
+} catch (e) {}
+
+function persist() {
+  try { localStorage.setItem('psique.onboarding.progress', JSON.stringify({ step:state.step, qi:state.qi, answers:state.answers, optionOrder:state.optionOrder })); } catch (e) {}
+}
+
+const card = document.getElementById('card');
+const bar = document.getElementById('bar');
+const counter = document.getElementById('counter');
+const backBtn = document.getElementById('backBtn');
+
+function shuffled(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+
+// ─────────────────────────────────────────────
+// Render
+// ─────────────────────────────────────────────
+function render() {
+  const answeredCount = Object.keys(state.answers).filter(id => byIdHas(id)).length;
+  const progress = state.step === 'result' ? 1 : (state.step === 'q' ? state.qi / TOTAL : 0);
+  bar.style.width = (progress * 100).toFixed(1) + '%';
+
+  const showBack = (state.step === 'q' && state.qi > 0) || state.step === 'intro2' || (state.step === 'q' && state.qi === 0);
+  backBtn.classList.toggle('show', showBack || state.step === 'result');
+  counter.textContent = state.step === 'q' ? `${state.qi + 1} / ${TOTAL}` : '';
+
+  if (state.step === 'intro1') return renderIntro1();
+  if (state.step === 'intro2') return renderIntro2();
+  if (state.step === 'q') return renderQuestion();
+  if (state.step === 'result') return renderResult();
+}
+function byIdHas(id) { return QUESTIONS.some(q => q.id === id); }
+
+function fresh(html) { card.style.animation = 'none'; card.offsetWidth; card.style.animation = ''; card.innerHTML = html; }
+
+function renderIntro1() {
+  fresh(`
+    <div class="kicker">A Psique · segundo C. G. Jung</div>
+    <div class="prompt" style="margin-bottom:22px">Descubra a configuração da sua psique.</div>
+    <p class="lead muted">Um instrumento de autorreflexão à luz da tipologia junguiana — <em>não</em> um diagnóstico. Ao final, você recebe uma estimativa viva das suas quatro funções, que poderá ajustar como sentir.</p>
+    <div class="btn-row"><button class="btn" id="go">Começar</button></div>
+  `);
+  document.getElementById('go').onclick = () => { state.step = 'intro2'; persist(); render(); };
+}
+
+function renderIntro2() {
+  fresh(`
+    <div class="kicker">Antes de começar</div>
+    <p class="lead">Responda pensando no que você <em>de fato costuma fazer</em> — não no que gostaria de fazer, nem no que acha que deveria.</p>
+    <p class="lead muted">São cerca de 5 minutos. Não há respostas certas ou erradas.</p>
+    <div class="btn-row"><button class="btn" id="go">Entendi, vamos</button></div>
+  `);
+  document.getElementById('go').onclick = () => { state.step = 'q'; state.qi = 0; persist(); render(); };
+}
+
+function renderQuestion() {
+  const q = QUESTIONS[state.qi];
+  if (q.type === 'bipolar5') return renderBipolar(q);
+  if (q.type === 'likert5') return renderLikert(q);
+  if (q.type === 'scenario') return renderScenario(q);
+}
+
+function advance() {
+  persist();
+  if (state.qi < TOTAL - 1) { state.qi++; render(); }
+  else { state.step = 'result'; persist(); render(); }
+}
+
+function renderBipolar(q) {
+  const cur = state.answers[q.id];
+  const toneL = q.left.fn ? FN_COLOR[q.left.fn] : 'var(--ink-soft)';
+  const toneR = q.right.fn ? FN_COLOR[q.right.fn] : 'var(--ink-soft)';
+  const tagL = q.left.att ? (q.left.att === 'I' ? 'introversão' : 'extroversão') : '';
+  const tagR = q.right.att ? (q.right.att === 'I' ? 'introversão' : 'extroversão') : '';
+  fresh(`
+    <div class="kicker">${phaseLabel(q.phase)}</div>
+    <div class="prompt">${q.text}</div>
+    <div class="poles">
+      <div class="pole" style="--tone:${toneL}">${tagL ? `<span class="tag">${tagL}</span>` : ''}${q.left.label}</div>
+      <div class="scale5" id="scale">
+        ${[-2,-1,0,1,2].map(v => `<button data-v="${v}" class="${cur===v?'sel':''}" aria-label="nível ${v}"></button>`).join('')}
+      </div>
+      <div class="scale-ends"><span>← mais isto</span><span>mais aquilo →</span></div>
+      <div class="pole" style="--tone:${toneR};margin-top:14px">${tagR ? `<span class="tag">${tagR}</span>` : ''}${q.right.label}</div>
+    </div>
+  `);
+  wireScale(q);
+}
+
+function renderLikert(q) {
+  const cur = state.answers[q.id];
+  fresh(`
+    <div class="kicker">${phaseLabel(q.phase)} · o quanto isto é verdade sobre você</div>
+    <div class="prompt" style="font-size:clamp(21px,4.8vw,29px)">${q.text}</div>
+    <div class="likert">
+      <div class="scale5" id="scale">
+        ${[1,2,3,4,5].map(v => `<button data-v="${v}" class="${cur===v?'sel':''}" aria-label="nível ${v}"></button>`).join('')}
+      </div>
+      <div class="likert-ends"><span>nunca</span><span>quase sempre</span></div>
+    </div>
+  `);
+  wireScale(q);
+}
+
+function wireScale(q) {
+  document.querySelectorAll('#scale button').forEach(b => {
+    b.onclick = () => {
+      const v = +b.dataset.v;
+      state.answers[q.id] = v;
+      document.querySelectorAll('#scale button').forEach(x => x.classList.remove('sel'));
+      b.classList.add('sel');
+      setTimeout(advance, 300);
+    };
+  });
+}
+
+function renderScenario(q) {
+  if (!state.optionOrder[q.id]) {
+    state.optionOrder[q.id] = q.shuffle ? shuffled(q.options.map((_, i) => i)) : q.options.map((_, i) => i);
+  }
+  const order = state.optionOrder[q.id];
+  const cur = state.answers[q.id];
+  fresh(`
+    <div class="kicker">${phaseLabel(q.phase)}</div>
+    <div class="prompt">${q.text}</div>
+    <div class="options" id="opts">
+      ${order.map(i => { const o = q.options[i]; return `<button class="option ${cur===o.infFn?'sel':''}" data-fn="${o.infFn}">${o.label}</button>`; }).join('')}
+    </div>
+  `);
+  document.querySelectorAll('#opts .option').forEach(b => {
+    b.onclick = () => {
+      state.answers[q.id] = b.dataset.fn;
+      document.querySelectorAll('#opts .option').forEach(x => x.classList.remove('sel'));
+      b.classList.add('sel');
+      setTimeout(advance, 300);
+    };
+  });
+}
+
+function phaseLabel(p) {
+  return { A:'Atitude', B:'Preferência', C:'Desenvolvimento', D:'Sob a superfície' }[p] || '';
+}
+
+function renderResult() {
+  const r = resolve(state.answers);
+  const tb = tiebreakNeeded(r);
+  const attWord = r.attitude === 'I' ? 'introvertida' : 'extrovertida';
+  const fn = (f) => `<span class="result-fn" style="color:${FN_COLOR[f]}"><span class="swatch" style="background:${FN_COLOR[f]}"></span>${FN_LABEL[f]}</span>`;
+  const auxTop = [r.auxRight, r.auxLeft].filter(f => r.slots[f].startsWith('top'));
+  const auxBot = [r.auxRight, r.auxLeft].filter(f => r.slots[f].startsWith('bot'));
+  const auxLine = auxTop.length && auxBot.length
+    ? `${auxTop.map(fn).join(' e ')} desenvolvida${auxTop.length>1?'s':''} na consciência; ${auxBot.map(fn).join(' e ')} ainda em trânsito para o inconsciente.`
+    : auxTop.length === 2
+      ? `${auxTop.map(fn).join(' e ')} ambas presentes na consciência.`
+      : `${auxBot.map(fn).join(' e ')} ainda mergulhadas no inconsciente.`;
+
+  fresh(`
+    <div class="kicker">Sua psique · estimativa</div>
+    <div class="prompt" style="margin-bottom:24px">Uma disposição <em>${attWord}</em>.</div>
+    <div class="rline"><span class="rlabel">função superior</span><br>${fn(r.superior)} conduz a sua consciência.</div>
+    <div class="rline" style="margin-top:16px"><span class="rlabel">auxiliares</span><br>${auxLine}</div>
+    <div class="rline" style="margin-top:16px"><span class="rlabel">função inferior</span><br>${fn(r.inferior)} permanece a mais distante — a porta para o inconsciente.</div>
+    <p class="disclaimer">Isto é uma estimativa, não um veredito. A seguir você vê sua psique em movimento — e pode ajustá-la como sentir.</p>
+    <div class="btn-row">
+      <button class="btn" id="see">Ver minha psique</button>
+      <button class="btn" id="redo" style="border:none;padding-left:6px">refazer</button>
+    </div>
+    ${tb ? `<p class="disclaimer" style="opacity:0.7">· dois sinais ficaram próximos; uma pergunta extra afinaria o resultado (${tb}).</p>` : ''}
+  `);
+  // salva a configuração para o esquema consumir
+  try {
+    localStorage.setItem('psique.config', JSON.stringify({ version:r.version, attitude:r.attitude, slots:r.slots, development:r.development, ts:Date.now() }));
+    localStorage.removeItem('psique.onboarding.progress');
+  } catch (e) {}
+  document.getElementById('see').onclick = () => { window.location.href = '../PSIQUE.html'; };
+  document.getElementById('redo').onclick = () => { state.step='intro1'; state.qi=0; state.answers={}; state.optionOrder={}; persist(); render(); };
+}
+
+// ─────────────────────────────────────────────
+// Voltar
+// ─────────────────────────────────────────────
+backBtn.onclick = () => {
+  if (state.step === 'intro2') { state.step = 'intro1'; }
+  else if (state.step === 'q' && state.qi === 0) { state.step = 'intro2'; }
+  else if (state.step === 'q') { state.qi--; }
+  else if (state.step === 'result') { state.step = 'q'; state.qi = TOTAL - 1; }
+  persist(); render();
+};
+
+render();
+</script>
+</body>
+</html>
