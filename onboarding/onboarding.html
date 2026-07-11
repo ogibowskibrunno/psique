@@ -48,10 +48,15 @@
   .topbar .back.show { opacity:1; pointer-events:auto; }
   .topbar .back:hover { color:var(--ink); }
 
-  /* ── Palco ── */
+  /* ── Palco ──
+     Base sólida primeiro; longhands com env() por cima. Se algum
+     max(env()) for inválido no motor, o valor-base permanece (não zera). */
   .stage {
     min-height:100dvh; display:grid; place-items:center;
-    padding:72px max(20px,env(safe-area-inset-left)) max(28px,calc(20px+env(safe-area-inset-bottom))) max(20px,env(safe-area-inset-right));
+    padding:72px 22px 28px;
+    padding-left:max(22px, env(safe-area-inset-left));
+    padding-right:max(22px, env(safe-area-inset-right));
+    padding-bottom:max(28px, calc(20px + env(safe-area-inset-bottom)));
   }
   .card {
     width:100%; max-width:620px; margin:0 auto;
@@ -81,22 +86,33 @@
     border:1px solid var(--ink-faint); padding:15px 17px; line-height:1.34; font-size:clamp(16px,3.9vw,19px);
     background:rgba(237,230,216,0.5); position:relative;
     border-left:3px solid var(--tone,var(--ink-faint));
+    transition:background 200ms ease, border-color 200ms ease;
   }
+  .pole.leaning { background:rgba(90,30,16,0.07); border-color:var(--tone,var(--ink)); }
   .pole .tag { font-family:'JetBrains Mono', monospace; font-size:9px; letter-spacing:0.14em; text-transform:uppercase; color:var(--tone,var(--ink-soft)); display:block; margin-bottom:5px; opacity:0.8; }
-  .scale5 { display:flex; align-items:center; justify-content:center; gap:min(6vw,34px); padding:20px 6px; }
+  .scale5 { display:flex; align-items:center; justify-content:center; gap:min(6vw,34px); padding:18px 6px; position:relative; }
   .scale5 button {
+    width:28px; height:28px;
     border:1.5px solid var(--ink-faint); background:var(--paper); border-radius:50%;
     cursor:pointer; padding:0; transition:all 180ms cubic-bezier(.2,.7,.2,1);
+    position:relative; z-index:1;
   }
   .scale5 button:hover { border-color:var(--ink); }
-  .scale5 button.sel { background:var(--ink); border-color:var(--ink); transform:scale(1.12); }
-  /* tamanhos graduados só na escala bipolar: extremos maiores, centro menor */
-  .poles .scale5 button[data-v="-2"], .poles .scale5 button[data-v="2"] { width:34px; height:34px; }
-  .poles .scale5 button[data-v="-1"], .poles .scale5 button[data-v="1"] { width:27px; height:27px; }
-  .poles .scale5 button[data-v="0"] { width:20px; height:20px; }
-  /* likert: escala de concordância simétrica, pontos uniformes */
-  .likert .scale5 button { width:28px; height:28px; }
-  .scale-ends { display:flex; justify-content:space-between; font-family:'JetBrains Mono', monospace; font-size:9.5px; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-soft); opacity:0.7; margin-top:-4px; }
+  .scale5 button.sel { background:var(--ink); border-color:var(--ink); transform:scale(1.14); }
+
+  /* bipolar: continuum entre os dois cards — trilho + pontos tingidos por lado.
+     Os pontos da esquerda herdam a cor do card de cima; os da direita, o de baixo. */
+  .poles .scale5::before {
+    content:''; position:absolute; left:9%; right:9%; top:50%; height:1px;
+    background:var(--ink-faint); opacity:0.55; z-index:0;
+  }
+  .poles .scale5 button { border-color:var(--dotTone, var(--ink-faint)); }
+  .poles .scale5 button[data-v="-2"], .poles .scale5 button[data-v="-1"] { --dotTone:var(--toneA, var(--ink-soft)); }
+  .poles .scale5 button[data-v="0"]  { --dotTone:var(--ink-faint); }
+  .poles .scale5 button[data-v="1"],  .poles .scale5 button[data-v="2"]  { --dotTone:var(--toneB, var(--ink-soft)); }
+  .poles .scale5 button.sel { background:var(--dotTone); border-color:var(--dotTone); }
+
+  .scale-ends { display:flex; justify-content:space-between; font-family:'JetBrains Mono', monospace; font-size:9.5px; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-soft); opacity:0.72; margin-top:2px; }
 
   /* ── likert5 ── */
   .likert { margin-top:30px; }
@@ -237,16 +253,19 @@ function renderBipolar(q) {
   fresh(`
     <div class="kicker">${phaseLabel(q.phase)}</div>
     <div class="prompt">${q.text}</div>
-    <div class="poles">
-      <div class="pole" style="--tone:${toneL}">${tagL ? `<span class="tag">${tagL}</span>` : ''}${q.left.label}</div>
+    <div class="poles" style="--toneA:${toneL};--toneB:${toneR}">
+      <div class="pole" id="poleA" style="--tone:${toneL}">${tagL ? `<span class="tag">${tagL}</span>` : ''}${q.left.label}</div>
       <div class="scale5" id="scale">
         ${[-2,-1,0,1,2].map(v => `<button data-v="${v}" class="${cur===v?'sel':''}" aria-label="nível ${v}"></button>`).join('')}
       </div>
-      <div class="scale-ends"><span>← mais isto</span><span>mais aquilo →</span></div>
-      <div class="pole" style="--tone:${toneR};margin-top:14px">${tagR ? `<span class="tag">${tagR}</span>` : ''}${q.right.label}</div>
+      <div class="scale-ends"><span>${tagL || 'mais a de cima'} ▲</span><span>▼ ${tagR || 'mais a de baixo'}</span></div>
+      <div class="pole" id="poleB" style="--tone:${toneR};margin-top:14px">${tagR ? `<span class="tag">${tagR}</span>` : ''}${q.right.label}</div>
     </div>
   `);
-  wireScale(q);
+  const poleA = document.getElementById('poleA'), poleB = document.getElementById('poleB');
+  const lean = v => { poleA.classList.toggle('leaning', v < 0); poleB.classList.toggle('leaning', v > 0); };
+  if (typeof cur === 'number') lean(cur);   // reflete resposta já dada
+  wireScale(q, lean);
 }
 
 function renderLikert(q) {
@@ -264,13 +283,14 @@ function renderLikert(q) {
   wireScale(q);
 }
 
-function wireScale(q) {
+function wireScale(q, onSelect) {
   document.querySelectorAll('#scale button').forEach(b => {
     b.onclick = () => {
       const v = +b.dataset.v;
       state.answers[q.id] = v;
       document.querySelectorAll('#scale button').forEach(x => x.classList.remove('sel'));
       b.classList.add('sel');
+      if (onSelect) onSelect(v);
       setTimeout(advance, 300);
     };
   });
