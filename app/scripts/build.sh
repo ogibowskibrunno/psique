@@ -17,5 +17,12 @@ cp native/native.js www/native.js
 # HTML: injeta o script nativo antes de </body>
 sed 's|</body>|<script src="native.js"></script>\n</body>|' ../PSIQUE.html > www/index.html
 
+# onboarding (questionário): tela + motor.
+# No app, o esquema (index.html) redireciona para cá na primeira abertura;
+# o onboarding volta para ../index.html, que é o próprio esquema.
+mkdir -p www/onboarding
+cp ../onboarding/onboarding.html www/onboarding/onboarding.html
+cp ../onboarding/instrument.js   www/onboarding/instrument.js
+
 echo "www/ pronto:"
-ls www www/fonts
+ls www www/fonts www/onboarding

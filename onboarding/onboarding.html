@@ -193,9 +193,16 @@ function renderIntro1() {
     <div class="kicker">A Psique · segundo C. G. Jung</div>
     <div class="prompt" style="margin-bottom:22px">Descubra a configuração da sua psique.</div>
     <p class="lead muted">Um instrumento de autorreflexão à luz da tipologia junguiana — <em>não</em> um diagnóstico. Ao final, você recebe uma estimativa viva das suas quatro funções, que poderá ajustar como sentir.</p>
-    <div class="btn-row"><button class="btn" id="go">Começar</button></div>
+    <div class="btn-row">
+      <button class="btn" id="go">Começar</button>
+      <button class="btn" id="skip" style="border:none;padding-left:6px">pular por enquanto</button>
+    </div>
   `);
   document.getElementById('go').onclick = () => { state.step = 'intro2'; persist(); render(); };
+  document.getElementById('skip').onclick = () => {
+    try { localStorage.setItem('psique.onboarding.seen', 'skipped'); localStorage.removeItem('psique.onboarding.progress'); } catch (e) {}
+    window.location.href = '../index.html';
+  };
 }
 
 function renderIntro2() {
@@ -325,9 +332,11 @@ function renderResult() {
   // salva a configuração para o esquema consumir
   try {
     localStorage.setItem('psique.config', JSON.stringify({ version:r.version, attitude:r.attitude, slots:r.slots, development:r.development, ts:Date.now() }));
+    localStorage.setItem('psique.onboarding.seen', 'done');
     localStorage.removeItem('psique.onboarding.progress');
   } catch (e) {}
-  document.getElementById('see').onclick = () => { window.location.href = '../PSIQUE.html'; };
+  // '../index.html' funciona no site (redireciona ao PSIQUE.html) e no app (é o esquema)
+  document.getElementById('see').onclick = () => { window.location.href = '../index.html'; };
   document.getElementById('redo').onclick = () => { state.step='intro1'; state.qi=0; state.answers={}; state.optionOrder={}; persist(); render(); };
 }
 

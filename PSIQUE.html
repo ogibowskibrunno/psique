@@ -9,6 +9,17 @@
 <meta property="og:title" content="A Psique">
 <meta property="og:description" content="A Psique — quatro funções psíquicas, três conscientes e uma inconsciente, em movimento.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='12' fill='%235a1e10'/%3E%3Ccircle cx='13' cy='12' r='4' fill='%23f4efe6' opacity='.55'/%3E%3C/svg%3E">
+<script>
+  // Primeira abertura no app (Capacitor): sem psique descoberta e sem
+  // onboarding visto → abre o questionário. Roda cedo, antes de pintar.
+  // (No site, o esquema abre direto; o onboarding fica acessível por link.)
+  try {
+    var _native = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
+    if (_native && !localStorage.getItem('psique.config') && !localStorage.getItem('psique.onboarding.seen')) {
+      location.replace('onboarding/onboarding.html');
+    }
+  } catch (e) {}
+</script>
 <style>
   /* ── Local variable fonts — the page works fully offline ── */
   @font-face {
@@ -152,26 +163,31 @@
   }
   .credit a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--ink-faint); }
 
-  .shuffle-btn {
+  .controls {
     position: fixed;
     bottom: max(16px, env(safe-area-inset-bottom));
     left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: row; gap: 10px; align-items: center; z-index: 10;
+  }
+  .ctrl-btn {
     font-family: 'JetBrains Mono', monospace;
     font-size: 2.2vmin; letter-spacing: 0.22em;
     text-transform: uppercase; color: var(--ink-soft);
     background: var(--paper); border: 1px solid var(--ink-faint);
-    padding: 8px 18px; cursor: pointer; z-index: 10;
+    padding: 8px 18px; cursor: pointer;
     transition: all 160ms ease; white-space: nowrap;
   }
-  .shuffle-btn:hover { color: var(--paper); background: var(--ink); border-color: var(--ink); }
+  .ctrl-btn:hover { color: var(--paper); background: var(--ink); border-color: var(--ink); }
+  .restore-btn { display: none; } /* mostrado só quando há uma psique descoberta */
 
   /* ── Desktop enhancements ── */
   @media (min-width: 700px) {
     .meta { display: block; }
     .credit { bottom: max(16px, env(safe-area-inset-bottom)); right: max(16px, env(safe-area-inset-right)); font-size: 1.6vmin; letter-spacing: 0.16em; line-height: 1.8; }
-    .shuffle-btn {
+    .controls {
       bottom: auto; left: auto; transform: none;
       top: 50%; right: max(28px, env(safe-area-inset-right)); transform: translateY(-50%);
+      flex-direction: column;
     }
     .title-block { top: max(28px, env(safe-area-inset-top)); right: max(32px, env(safe-area-inset-right)); }
   }
@@ -225,7 +241,7 @@
   .meta        { animation: fadeUp 700ms cubic-bezier(.2,.7,.2,1) 320ms both; }
   .tipo-mobile { animation: fadeIn 700ms ease 480ms both; }
   .credit      { animation: fadeIn 700ms ease 560ms both; }
-  .shuffle-btn { animation: fadeIn 700ms ease 680ms both; }
+  .controls { animation: fadeIn 700ms ease 680ms both; }
   .label-inside { animation: fadeIn 900ms ease 950ms both; }
 
   /* ── Physical feedback on the function handles ── */
@@ -236,14 +252,15 @@
   .handle-group:hover .handle { transform: scale(1.3); }
   .handle.grabbing { transform: scale(1.14); }
 
-  /* ── Shuffle button: pressed state + glyph spin ── */
-  .shuffle-btn:active { scale: 0.95; }
-  .shuffle-btn .glyph { display: inline-block; }
+  /* ── Buttons: pressed state + glyph spin ── */
+  .ctrl-btn:active { scale: 0.95; }
+  .ctrl-btn .glyph { display: inline-block; }
   @keyframes spinGlyph { to { transform: rotate(-360deg); } }
   .shuffle-btn.spinning .glyph { animation: spinGlyph 550ms cubic-bezier(.4,.1,.2,1); }
+  .restore-btn.pulse .glyph { animation: spinGlyph 550ms cubic-bezier(.4,.1,.2,1); }
 
   /* ── Keyboard focus ── */
-  .shuffle-btn:focus-visible,
+  .ctrl-btn:focus-visible,
   .attitude-toggle:focus-visible {
     outline: 2px solid var(--ink); outline-offset: 2px;
   }
@@ -275,7 +292,10 @@
   <h1>A Psique</h1>
 </div>
 
-<button class="shuffle-btn" id="shuffleBtn" aria-label="Sortear nova disposição"><span class="glyph">↺</span></button>
+<div class="controls">
+  <button class="ctrl-btn restore-btn" id="restoreBtn" aria-label="Restaurar minha psique" title="minha psique"><span class="glyph">◉</span></button>
+  <button class="ctrl-btn shuffle-btn" id="shuffleBtn" aria-label="Sortear nova disposição" title="sortear"><span class="glyph">↺</span></button>
+</div>
 
 <div class="grain" aria-hidden="true"></div>
 
@@ -811,6 +831,25 @@ shuffleBtnEl.addEventListener('click', () => {
   document.dispatchEvent(new CustomEvent('psique:shuffle'));
 });
 
+// Restaurar a psique descoberta no onboarding (só visível se houver config)
+const restoreBtnEl = document.getElementById('restoreBtn');
+function refreshRestoreVisibility() {
+  let has = false;
+  try { has = !!localStorage.getItem('psique.config'); } catch (e) {}
+  // valor explícito: '' cairia na regra .restore-btn{display:none}
+  restoreBtnEl.style.display = has ? 'inline-block' : 'none';
+}
+restoreBtnEl.addEventListener('click', () => {
+  if (!applyStoredConfig()) return;
+  restoreBtnEl.classList.remove('pulse');
+  void restoreBtnEl.offsetWidth;
+  restoreBtnEl.classList.add('pulse');
+  handles.forEach(h => { reslot(h, h.slot); h._returning = true; });
+  syncAttitudeTargets();
+  updateStateDisplay();
+  document.dispatchEvent(new CustomEvent('psique:rearrange'));
+});
+
 // ─────────────────────────────────────────────
 // Blob
 // ─────────────────────────────────────────────
@@ -1092,6 +1131,7 @@ attToggleMobEl    && attToggleMobEl.addEventListener('click', toggleAttitude);
 
 // ── Initial state display ──
 updateStateDisplay();
+refreshRestoreVisibility();
 </script>
 </body>
 </html>
