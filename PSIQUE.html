@@ -450,10 +450,14 @@ function syncAttitudeTargets({ immediate = false } = {}) {
 }
 
 // Places a function at its slot's default angle and development radius.
+// h.dev (0..1, do onboarding) modula o raio de repouso em ±15% em torno da
+// base do slot — o "retrato contínuo": duas pessoas com a mesma configuração
+// ganham silhuetas distintas. Sem config, h.dev é null e nada muda.
 function reslot(h, slotId) {
   h.slot = slotId;
   const ang  = SLOT_ANGLE[slotId];
-  const dist = L.fnRest * SLOT_REST[slotId];
+  const devMod = (h.dev == null) ? 1 : (0.85 + 0.30 * h.dev);
+  const dist = L.fnRest * SLOT_REST[slotId] * devMod;
   h.restX = CENTER.x + Math.cos(ang) * dist;
   h.restY = CENTER.y + Math.sin(ang) * dist;
   h.restRadius = dist;
@@ -1010,10 +1014,52 @@ function onResize() {
 }
 
 // ─────────────────────────────────────────────
+// Config do onboarding (localStorage 'psique.config')
+// Se houver uma configuração descoberta e válida, o esquema abre nela:
+// slots, atitude e o desenvolvimento (raio) de cada função. Validado
+// contra o invariante do modelo — config corrompida é ignorada.
+// ─────────────────────────────────────────────
+function applyStoredConfig() {
+  let cfg;
+  try { cfg = JSON.parse(localStorage.getItem('psique.config') || 'null'); }
+  catch (e) { return false; }
+  if (!cfg || !cfg.slots) return false;
+
+  const want = {};
+  for (const h of handles) {
+    const s = cfg.slots[h.id];
+    if (!SLOT_ANGLE[s]) return false;        // slot inexistente
+    want[h.id] = s;
+  }
+  if (new Set(handles.map(h => want[h.id])).size !== 4) return false; // slots repetidos
+
+  // invariante: par vertical em oposição direta; laterais em colunas opostas
+  const colOf = s => (s === 'topC' || s === 'bottom') ? null : (s.endsWith('L') ? 'L' : 'R');
+  for (const h of handles) {
+    const s = want[h.id], ps = want[handles[h.pair].id];
+    if (s === 'topC'   && ps !== 'bottom') return false;
+    if (s === 'bottom' && ps !== 'topC')   return false;
+    if (colOf(s) !== null) {                 // h é lateral
+      if (colOf(ps) === null) return false;  // par também precisa ser lateral
+      if (colOf(s) === colOf(ps)) return false;
+    }
+  }
+
+  currentAttitude = (cfg.attitude === 'E') ? 'E' : 'I';
+  handles.forEach(h => {
+    h.slot = want[h.id];
+    h.dev = (cfg.development && typeof cfg.development[h.id] === 'number')
+      ? Math.max(0, Math.min(1, cfg.development[h.id])) : null;
+  });
+  return true;
+}
+
+// ─────────────────────────────────────────────
 // Init
 // ─────────────────────────────────────────────
 applyLayout(computeLayout());
 SVG.setAttribute('viewBox', `0 0 ${VB.w} ${VB.h}`);
+applyStoredConfig();   // aplica a psique descoberta antes de posicionar
 resetPositions();
 buildAxis();
 
