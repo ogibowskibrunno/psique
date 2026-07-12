@@ -17,6 +17,8 @@
     --c-sentimento:#3f5b6b; --c-sensacao:#6b7645; --c-pensamento:#c9a25a; --c-intuicao:#a8432e;
   }
   * { box-sizing:border-box; margin:0; padding:0; }
+  /* Mobile: remove o flash de tap e o delay de 300ms; nada de seleção acidental */
+  button, .option, .btn { -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
   html, body { height:100%; }
   body {
     background:var(--paper); color:var(--ink);
@@ -58,11 +60,18 @@
     padding-right:max(22px, env(safe-area-inset-right));
     padding-bottom:max(28px, calc(20px + env(safe-area-inset-bottom)));
   }
-  .card {
-    width:100%; max-width:620px; margin:0 auto;
-    animation:enter 460ms cubic-bezier(.2,.7,.2,1) both;
+  .card { width:100%; max-width:620px; margin:0 auto; }
+  /* Entrada em cascata: cada bloco do card entra em sequência (waterfall sutil) */
+  .card > * { animation:enter 500ms cubic-bezier(.2,.7,.2,1) both; }
+  .card > *:nth-child(1){ animation-delay:20ms; }
+  .card > *:nth-child(2){ animation-delay:90ms; }
+  .card > *:nth-child(3){ animation-delay:160ms; }
+  .card > *:nth-child(4){ animation-delay:230ms; }
+  @keyframes enter { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:none; } }
+  @media (prefers-reduced-motion: reduce) {
+    .card > * { animation:none; }
+    .progress .bar, .pole, .option, .scale5 button, .scaleV button, .btn { transition:none; }
   }
-  @keyframes enter { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
 
   .kicker { font-family:'JetBrains Mono', monospace; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:18px; }
   .prompt { font-size:clamp(24px,5.2vw,34px); font-style:italic; font-weight:500; line-height:1.18; letter-spacing:0.005em; text-wrap:balance; }
@@ -120,6 +129,12 @@
   .scaleV button[data-v="1"],  .scaleV button[data-v="2"]  { --dotTone:var(--toneB, var(--ink-soft)); }
   .scaleV button.sel { background:var(--dotTone); border-color:var(--dotTone); transform:scale(1.16); }
 
+  /* Alvo de toque ≥44px (o círculo visível fica menor, mas a área tocável cresce) */
+  .scale5 button::after, .scaleV button::after { content:''; position:absolute; inset:-9px; border-radius:50%; }
+  /* Feedback tátil no toque */
+  .scale5 button:active, .scaleV button:active { transform:scale(0.9); }
+  .scaleV button.sel:active { transform:scale(1.08); }
+
   /* ── likert5 ── */
   .likert { margin-top:30px; }
   .likert .scale5 { gap:min(7vw,40px); }
@@ -130,9 +145,11 @@
   .option {
     text-align:left; font:inherit; font-size:clamp(16px,3.9vw,19px); line-height:1.34;
     border:1px solid var(--ink-faint); background:rgba(237,230,216,0.5);
-    padding:15px 17px; cursor:pointer; transition:all 160ms ease; color:var(--ink);
+    padding:16px 18px; cursor:pointer; color:var(--ink);
+    transition:background 160ms ease, color 160ms ease, border-color 160ms ease, transform 160ms cubic-bezier(.2,.7,.2,1);
   }
   .option:hover { background:var(--ink); color:var(--paper); border-color:var(--ink); }
+  .option:active { transform:scale(0.985); }
   .option.sel { background:var(--ink); color:var(--paper); border-color:var(--ink); }
 
   /* ── resultado ── */

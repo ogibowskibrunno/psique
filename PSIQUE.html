@@ -48,6 +48,8 @@
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  /* Mobile: sem flash de tap nos controles (não mexe no touch-action:none do arrasto) */
+  .shuffle-btn, .restore-btn, .attitude-toggle, .label-inside { -webkit-tap-highlight-color: transparent; }
 
   html, body {
     height: 100%;
