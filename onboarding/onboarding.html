@@ -100,19 +100,25 @@
   .scale5 button:hover { border-color:var(--ink); }
   .scale5 button.sel { background:var(--ink); border-color:var(--ink); transform:scale(1.14); }
 
-  /* bipolar: continuum entre os dois cards — trilho + pontos tingidos por lado.
-     Os pontos da esquerda herdam a cor do card de cima; os da direita, o de baixo. */
-  .poles .scale5::before {
-    content:''; position:absolute; left:9%; right:9%; top:50%; height:1px;
-    background:var(--ink-faint); opacity:0.55; z-index:0;
+  /* bipolar: escala VERTICAL entre os dois cards. O eixo da escala segue o
+     eixo dos cards (cima↔baixo) — o ponto mais perto de um card significa
+     "mais aquele card". Sem rotação mental esquerda↔cima. Pontos de cima
+     herdam a cor do card de cima; os de baixo, a cor do card de baixo. */
+  .scaleV { display:flex; flex-direction:column; align-items:center; gap:12px; padding:14px 0; position:relative; }
+  .scaleV::before {
+    content:''; position:absolute; top:14px; bottom:14px; left:50%; width:1px;
+    transform:translateX(-50%); background:var(--ink-faint); opacity:0.55; z-index:0;
   }
-  .poles .scale5 button { border-color:var(--dotTone, var(--ink-faint)); }
-  .poles .scale5 button[data-v="-2"], .poles .scale5 button[data-v="-1"] { --dotTone:var(--toneA, var(--ink-soft)); }
-  .poles .scale5 button[data-v="0"]  { --dotTone:var(--ink-faint); }
-  .poles .scale5 button[data-v="1"],  .poles .scale5 button[data-v="2"]  { --dotTone:var(--toneB, var(--ink-soft)); }
-  .poles .scale5 button.sel { background:var(--dotTone); border-color:var(--dotTone); }
-
-  .scale-ends { display:flex; justify-content:space-between; font-family:'JetBrains Mono', monospace; font-size:9.5px; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-soft); opacity:0.72; margin-top:2px; }
+  .scaleV button {
+    width:30px; height:30px; position:relative; z-index:1;
+    border:1.5px solid var(--dotTone, var(--ink-faint)); background:var(--paper); border-radius:50%;
+    cursor:pointer; padding:0; transition:all 180ms cubic-bezier(.2,.7,.2,1);
+  }
+  .scaleV button:hover { border-color:var(--ink); }
+  .scaleV button[data-v="-2"], .scaleV button[data-v="-1"] { --dotTone:var(--toneA, var(--ink-soft)); }
+  .scaleV button[data-v="0"]  { --dotTone:var(--ink-faint); }
+  .scaleV button[data-v="1"],  .scaleV button[data-v="2"]  { --dotTone:var(--toneB, var(--ink-soft)); }
+  .scaleV button.sel { background:var(--dotTone); border-color:var(--dotTone); transform:scale(1.16); }
 
   /* ── likert5 ── */
   .likert { margin-top:30px; }
@@ -255,11 +261,10 @@ function renderBipolar(q) {
     <div class="prompt">${q.text}</div>
     <div class="poles" style="--toneA:${toneL};--toneB:${toneR}">
       <div class="pole" id="poleA" style="--tone:${toneL}">${tagL ? `<span class="tag">${tagL}</span>` : ''}${q.left.label}</div>
-      <div class="scale5" id="scale">
+      <div class="scaleV" id="scale">
         ${[-2,-1,0,1,2].map(v => `<button data-v="${v}" class="${cur===v?'sel':''}" aria-label="nível ${v}"></button>`).join('')}
       </div>
-      <div class="scale-ends"><span>${tagL || 'mais a de cima'} ▲</span><span>▼ ${tagR || 'mais a de baixo'}</span></div>
-      <div class="pole" id="poleB" style="--tone:${toneR};margin-top:14px">${tagR ? `<span class="tag">${tagR}</span>` : ''}${q.right.label}</div>
+      <div class="pole" id="poleB" style="--tone:${toneR}">${tagR ? `<span class="tag">${tagR}</span>` : ''}${q.right.label}</div>
     </div>
   `);
   const poleA = document.getElementById('poleA'), poleB = document.getElementById('poleB');
