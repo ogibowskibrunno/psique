@@ -246,8 +246,8 @@
 // Enquanto forem os placeholders, o app roda em MODO LOCAL (localStorage),
 // para você testar a experiência antes de configurar o backend.
 // ═══════════════════════════════════════════════════════════════
-const SUPABASE_URL = 'https://SEU-PROJETO.supabase.co';
-const SUPABASE_KEY = 'SUA-ANON-KEY';
+const SUPABASE_URL = 'https://oedmlabaxdphbzypqevp.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9lZG1sYWJheGRwaGJ6eXBxZXZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5ODYsImV4cCI6MjA5OTUyNzk4Nn0.jqDkDkNt_BOTnhanXFd2KwPDMRTkmSbyC8DHFRUrofM';
 
 const CONFIGURED = !/SEU-PROJETO|SUA-ANON-KEY/.test(SUPABASE_URL + SUPABASE_KEY);
 const sb = CONFIGURED ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;

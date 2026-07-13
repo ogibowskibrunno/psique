@@ -189,8 +189,8 @@ const state = {
 // quem enviou o link. O resultado é enviado para lá (Edge Function no modo
 // real; biblioteca local no mesmo navegador para teste). Sem ?c, nada muda. ──
 const INVITE_TOKEN = new URLSearchParams(location.search).get('c');
-const INV_SB_URL = 'https://SEU-PROJETO.supabase.co';   // mesmos valores do conta/index.html
-const INV_SB_KEY = 'SUA-ANON-KEY';
+const INV_SB_URL = 'https://oedmlabaxdphbzypqevp.supabase.co';   // mesmos valores do conta/index.html
+const INV_SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9lZG1sYWJheGRwaGJ6eXBxZXZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5ODYsImV4cCI6MjA5OTUyNzk4Nn0.jqDkDkNt_BOTnhanXFd2KwPDMRTkmSbyC8DHFRUrofM';
 async function submitInvite(r){
   if(!INVITE_TOKEN) return;
   const payload = { token:INVITE_TOKEN,
