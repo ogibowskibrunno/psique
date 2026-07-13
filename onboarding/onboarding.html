@@ -185,6 +185,35 @@ const state = {
   optionOrder: {},  // ordem embaralhada por scenario (estável)
 };
 
+// ── Convite: se a URL tem ?c=TOKEN, este preenchimento pertence à conta de
+// quem enviou o link. O resultado é enviado para lá (Edge Function no modo
+// real; biblioteca local no mesmo navegador para teste). Sem ?c, nada muda. ──
+const INVITE_TOKEN = new URLSearchParams(location.search).get('c');
+const INV_SB_URL = 'https://SEU-PROJETO.supabase.co';   // mesmos valores do conta/index.html
+const INV_SB_KEY = 'SUA-ANON-KEY';
+async function submitInvite(r){
+  if(!INVITE_TOKEN) return;
+  const payload = { token:INVITE_TOKEN,
+    config:{ attitude:r.attitude, slots:r.slots, development:r.development },
+    answers: state.answers, instrument_version: r.version };
+  const configured = !/SEU-PROJETO|SUA-ANON/.test(INV_SB_URL + INV_SB_KEY);
+  if(configured){
+    try{
+      await fetch(INV_SB_URL + '/functions/v1/submit-invite', { method:'POST',
+        headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+INV_SB_KEY },
+        body: JSON.stringify(payload) });
+    }catch(e){ console.warn('submit-invite falhou', e); }
+  } else {
+    // modo local (mesmo navegador): grava na biblioteca local pelo token
+    try{
+      const arr = JSON.parse(localStorage.getItem('psique.conta.pessoas')||'[]');
+      const i = arr.findIndex(p=>p.invite_token===INVITE_TOKEN);
+      if(i>=0){ arr[i].config=payload.config; arr[i].status='ready'; arr[i].updated_at=new Date().toISOString();
+        localStorage.setItem('psique.conta.pessoas', JSON.stringify(arr)); }
+    }catch(e){}
+  }
+}
+
 // restaura progresso, se houver
 try {
   const saved = JSON.parse(localStorage.getItem('psique.onboarding.progress') || 'null');
@@ -377,6 +406,8 @@ function renderResult() {
     localStorage.setItem('psique.onboarding.seen', 'done');
     localStorage.removeItem('psique.onboarding.progress');
   } catch (e) {}
+  // convite: envia o resultado para a conta de quem compartilhou o link
+  submitInvite(r);
   // '../index.html' funciona no site (redireciona ao PSIQUE.html) e no app (é o esquema)
   document.getElementById('see').onclick = () => { window.location.href = '../index.html'; };
   document.getElementById('redo').onclick = () => { state.step='intro1'; state.qi=0; state.answers={}; state.optionOrder={}; persist(); render(); };

@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>A Psique — Conta</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4efe6">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+  @font-face{font-family:'Cormorant Garamond';font-style:normal;font-weight:300 700;font-display:swap;src:url('../fonts/cormorant-garamond.woff2') format('woff2')}
+  @font-face{font-family:'Cormorant Garamond';font-style:italic;font-weight:300 700;font-display:swap;src:url('../fonts/cormorant-garamond-italic.woff2') format('woff2')}
+  @font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:100 800;font-display:swap;src:url('../fonts/jetbrains-mono.woff2') format('woff2')}
+
+  :root{
+    --paper:#f4efe6; --paper-2:#ece3d4; --card:#f7f2ea;
+    --ink:#5a1e10; --ink-soft:#7d5d4e; --ink-faint:rgba(90,30,16,0.30);
+    --line:rgba(90,30,16,0.15); --dot:rgba(90,30,16,0.09);
+    --agua:#3f5b6b; --terra:#6b7645; --ar:#c9a25a; --fogo:#a8432e;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  button,input{-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:'JetBrains Mono', ui-monospace, Menlo, monospace;
+    background-image:radial-gradient(circle at 1px 1px, var(--dot) 1px, transparent 1px);
+    background-size:18px 18px; -webkit-font-smoothing:antialiased; min-height:100dvh;
+  }
+  .serif{font-family:'Cormorant Garamond', Georgia, serif; font-style:italic}
+  .grain{position:fixed;inset:0;z-index:60;pointer-events:none;opacity:0.04;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+  /* ── Auth ── */
+  #auth{min-height:100dvh; display:grid; place-items:center; padding:max(24px,env(safe-area-inset-top)) 22px}
+  .auth-card{width:100%; max-width:380px; text-align:center}
+  .auth-mark{width:56px;height:56px;margin:0 auto 20px}
+  .auth-kick{font-size:11px;letter-spacing:0.24em;text-transform:uppercase;color:var(--ink-soft)}
+  .auth-title{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-weight:500;font-size:38px;line-height:1.05;margin:6px 0 8px}
+  .auth-sub{font-size:12.5px;color:var(--ink-soft);line-height:1.6;margin-bottom:26px}
+  .g-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:11px;background:var(--card);
+    border:1px solid var(--ink-faint);border-radius:4px;padding:13px;font:inherit;font-size:14px;color:var(--ink);cursor:pointer;transition:all 150ms ease}
+  .g-btn:hover{border-color:var(--ink);background:var(--paper-2)}
+  .g-btn:active{scale:0.98}
+  .divider{display:flex;align-items:center;gap:12px;color:var(--ink-faint);font-size:11px;letter-spacing:0.14em;text-transform:uppercase;margin:18px 0}
+  .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--line)}
+  .field{text-align:left;margin-bottom:12px}
+  .field label{display:block;font-size:11px;letter-spacing:0.06em;color:var(--ink-soft);margin-bottom:6px}
+  .field input{width:100%;font:inherit;font-size:14px;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:4px;padding:12px}
+  .field input:focus{outline:none;border-color:var(--ink-faint)}
+  .field input:focus-visible{outline:2px solid var(--ink);outline-offset:1px}
+  .primary{width:100%;background:var(--ink);color:var(--paper);border:none;border-radius:4px;padding:13px;font:inherit;font-size:13px;
+    letter-spacing:0.16em;text-transform:uppercase;cursor:pointer;transition:all 150ms ease;margin-top:6px}
+  .primary:hover{opacity:0.9}.primary:active{scale:0.98}.primary:disabled{opacity:0.5;cursor:not-allowed}
+  .auth-err{font-size:11.5px;color:var(--fogo);min-height:15px;margin-top:8px;line-height:1.4}
+  .auth-switch{font-size:12.5px;color:var(--ink-soft);margin-top:18px}
+  .auth-switch button{background:none;border:none;color:var(--ink);font:inherit;font-size:12.5px;cursor:pointer;text-decoration:underline;padding:0}
+  .hide{display:none!important}
+
+  .local-banner{position:fixed;bottom:0;left:0;right:0;z-index:50;background:var(--ar);color:#3a2a10;
+    font-size:11px;letter-spacing:0.05em;text-align:center;padding:7px 14px;line-height:1.4}
+
+  /* ── App shell ── */
+  #app{min-height:100dvh;display:flex;flex-direction:column}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;
+    padding:max(16px,env(safe-area-inset-top)) clamp(18px,4vw,40px) 14px;border-bottom:1px solid var(--line)}
+  .brand{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-weight:500;font-size:22px}
+  .brand small{font-family:'JetBrains Mono',monospace;font-style:normal;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--ink-soft);display:block;margin-top:-2px}
+  .who{font-size:11px;color:var(--ink-soft);display:flex;align-items:center;gap:12px}
+  .who button{background:none;border:1px solid var(--line);color:var(--ink-soft);font:inherit;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;padding:6px 11px;cursor:pointer;border-radius:3px;transition:all 140ms}
+  .who button:hover{border-color:var(--ink);color:var(--ink)}
+
+  main{flex:1;padding:clamp(22px,5vw,44px) clamp(18px,4vw,40px)}
+  .cat-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+  .cat-head h1{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-weight:500;font-size:clamp(28px,5vw,40px);line-height:1}
+  .cat-head p{font-size:12px;color:var(--ink-soft);margin-top:5px}
+  .add-btn{background:var(--ink);color:var(--paper);border:none;border-radius:4px;padding:12px 20px;font:inherit;font-size:12px;
+    letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;transition:all 150ms ease;white-space:nowrap}
+  .add-btn:hover{opacity:0.9}.add-btn:active{scale:0.98}
+  .head-actions{display:flex;gap:10px;flex-wrap:wrap}
+  .add-btn.ghost-btn{background:transparent;color:var(--ink-soft);border:1px solid var(--line)}
+  .add-btn.ghost-btn:hover{border-color:var(--ink);color:var(--ink);opacity:1}
+  .pcard.pending{border-style:dashed}
+  .pcard .copylink{background:none;border:none;color:var(--ink-faint);font:inherit;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;padding:4px}
+  .pcard .copylink:hover{color:var(--ink)}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+  .pcard{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:18px;cursor:pointer;
+    transition:border-color 160ms ease, transform 160ms cubic-bezier(.2,.7,.2,1);display:flex;flex-direction:column;gap:14px;text-align:left;font:inherit;color:var(--ink)}
+  .pcard:hover{border-color:var(--ink-faint)}
+  .pcard:active{transform:scale(0.99)}
+  .pcard .seal{width:46px;height:46px;flex:none}
+  .pcard .pname{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-size:22px;line-height:1.05}
+  .pcard .pmeta{font-size:10.5px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-soft);margin-top:4px}
+  .pcard .prow{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .pcard .del{background:none;border:none;color:var(--ink-faint);font:inherit;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;padding:4px}
+  .pcard .del:hover{color:var(--fogo)}
+  .empty{border:1px dashed var(--ink-faint);border-radius:8px;padding:40px 22px;text-align:center;color:var(--ink-soft);font-size:13px;line-height:1.6}
+  .empty .serif{font-size:22px;color:var(--ink);display:block;margin-bottom:6px}
+
+  /* ── Patient view (schema iframe) ── */
+  #patient{position:fixed;inset:0;z-index:40;background:var(--paper);display:flex;flex-direction:column}
+  .pv-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:max(12px,env(safe-area-inset-top)) 16px 10px;border-bottom:1px solid var(--line);background:var(--paper)}
+  .pv-bar .back{background:none;border:none;color:var(--ink-soft);font:inherit;font-size:12px;letter-spacing:0.1em;cursor:pointer;padding:6px 4px}
+  .pv-bar .back:hover{color:var(--ink)}
+  .pv-name{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-size:19px}
+  .pv-actions{display:flex;gap:8px}
+  .pv-actions button{background:none;border:1px solid var(--line);color:var(--ink-soft);font:inherit;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;padding:8px 12px;cursor:pointer;border-radius:3px;transition:all 140ms}
+  .pv-actions button:hover{border-color:var(--ink);color:var(--ink)}
+  #schemaFrame{flex:1;border:none;width:100%}
+
+  /* ── Modal ── */
+  .modal-bg{position:fixed;inset:0;z-index:70;background:rgba(30,15,8,0.4);display:grid;place-items:center;padding:22px}
+  .modal{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:24px;width:100%;max-width:360px}
+  .modal h3{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-weight:500;font-size:24px;margin-bottom:14px}
+  .modal .row{display:flex;gap:10px;margin-top:18px}
+  .modal .row button{flex:1}
+  .ghost{background:transparent;border:1px solid var(--line);color:var(--ink-soft);border-radius:4px;padding:13px;font:inherit;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer}
+  .ghost:hover{border-color:var(--ink);color:var(--ink)}
+
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+
+<!-- ═══ AUTH ═══ -->
+<div id="auth">
+  <div class="auth-card">
+    <svg class="auth-mark" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="13" fill="none" stroke="var(--ink)" stroke-width="1.2" opacity="0.5"/><circle cx="13" cy="12.5" r="4.5" fill="var(--ink)" opacity="0.85"/><circle cx="16" cy="16" r="1.6" fill="var(--ink)"/></svg>
+    <div class="auth-kick">A Psique · Conta</div>
+    <div class="auth-title" id="authTitle">Entrar</div>
+    <div class="auth-sub" id="authSub">Acesse para reunir as pessoas da sua conta e explorar cada psique.</div>
+
+    <button class="g-btn" id="googleBtn">
+      <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.97 10.72a5.4 5.4 0 0 1 0-3.44V4.95H.96a9 9 0 0 0 0 8.1l3.01-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.46 3.44 1.35l2.58-2.58A9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z"/></svg>
+      Continuar com Google
+    </button>
+
+    <div class="divider"><span>ou</span></div>
+
+    <div id="emailForm">
+      <div class="field hide" id="nameField">
+        <label>Seu nome</label>
+        <input id="regName" type="text" placeholder="Como devemos te chamar" autocomplete="name">
+      </div>
+      <div class="field">
+        <label>E-mail</label>
+        <input id="email" type="email" placeholder="voce@exemplo.com" autocomplete="email">
+      </div>
+      <div class="field">
+        <label>Senha</label>
+        <input id="pass" type="password" placeholder="Mínimo 6 caracteres" autocomplete="current-password">
+      </div>
+      <button class="primary" id="emailBtn">Entrar</button>
+      <div class="auth-err" id="authErr"></div>
+    </div>
+
+    <div class="auth-switch">
+      <span id="switchPrompt">Novo por aqui?</span>
+      <button id="switchBtn">Criar conta</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ APP ═══ -->
+<div id="app" class="hide">
+  <div class="topbar">
+    <div class="brand">A Psique<small>Conta</small></div>
+    <div class="who"><span id="whoEmail"></span><button id="signOutBtn">Sair</button></div>
+  </div>
+  <main>
+    <div class="cat-head">
+      <div>
+        <h1>Pessoas</h1>
+        <p id="catCount"></p>
+      </div>
+      <div class="head-actions">
+        <button class="add-btn ghost-btn" id="inviteBtn">Convidar por link</button>
+        <button class="add-btn" id="newBtn">+ Nova pessoa</button>
+      </div>
+    </div>
+    <div class="grid" id="grid"></div>
+  </main>
+</div>
+
+<!-- ═══ MODAL: CONVIDAR POR LINK ═══ -->
+<div id="linkModal" class="modal-bg hide">
+  <div class="modal">
+    <h3>Convidar por link</h3>
+    <p style="font-size:12.5px;color:var(--ink-soft);line-height:1.55;margin-bottom:4px">A pessoa preenche o questionário pelo link e o resultado aparece aqui na sua conta.</p>
+    <div class="field" style="margin-top:14px">
+      <label>Nome ou iniciais (opcional)</label>
+      <input id="lName" type="text" placeholder="Ex.: M. R." autocomplete="off">
+    </div>
+    <div id="linkOut" class="hide">
+      <label style="display:block;font-size:11px;color:var(--ink-soft);margin-bottom:7px">Link para enviar:</label>
+      <div style="display:flex;gap:8px">
+        <input id="linkUrl" type="text" readonly style="flex:1;font:inherit;font-size:12px;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:4px;padding:11px">
+        <button class="ghost" id="linkCopy" style="padding:11px 14px;white-space:nowrap">Copiar</button>
+      </div>
+    </div>
+    <div class="auth-err" id="lErr"></div>
+    <div class="row">
+      <button class="ghost" id="lClose">Fechar</button>
+      <button class="primary" id="lCreate" style="margin-top:0">Gerar link</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PATIENT VIEW ═══ -->
+<div id="patient" class="hide">
+  <div class="pv-bar">
+    <button class="back" id="pvBack">← pessoas</button>
+    <div class="pv-name" id="pvName"></div>
+    <div class="pv-actions">
+      <button id="pvReassess">Questionário</button>
+    </div>
+  </div>
+  <iframe id="schemaFrame" title="Esquema da psique"></iframe>
+</div>
+
+<!-- ═══ NEW PATIENT MODAL ═══ -->
+<div id="modal" class="modal-bg hide">
+  <div class="modal">
+    <h3>Nova pessoa</h3>
+    <div class="field">
+      <label>Nome (ou iniciais)</label>
+      <input id="mName" type="text" placeholder="Ex.: M. R." autocomplete="off">
+    </div>
+    <div class="field">
+      <label>Anotação (opcional)</label>
+      <input id="mNotes" type="text" placeholder="Contexto, queixa inicial…" autocomplete="off">
+    </div>
+    <div class="auth-err" id="mErr"></div>
+    <div class="row">
+      <button class="ghost" id="mCancel">Cancelar</button>
+      <button class="primary" id="mCreate" style="margin-top:0">Criar e avaliar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// SUPABASE — troque pelos valores do seu projeto (supabase.com).
+// Enquanto forem os placeholders, o app roda em MODO LOCAL (localStorage),
+// para você testar a experiência antes de configurar o backend.
+// ═══════════════════════════════════════════════════════════════
+const SUPABASE_URL = 'https://SEU-PROJETO.supabase.co';
+const SUPABASE_KEY = 'SUA-ANON-KEY';
+
+const CONFIGURED = !/SEU-PROJETO|SUA-ANON-KEY/.test(SUPABASE_URL + SUPABASE_KEY);
+const sb = CONFIGURED ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+
+const FN = { pensamento:'#c9a25a', sentimento:'#3f5b6b', sensacao:'#6b7645', intuicao:'#a8432e' };
+const FN_LABEL = { pensamento:'pensamento', sentimento:'sentimento', sensacao:'sensação', intuicao:'intuição' };
+const $ = s => document.querySelector(s);
+
+let user = null;
+let mode = 'login';           // login | signup
+let activePatientId = null;   // pessoa sendo criada/aberta
+
+// ── Store: Supabase quando configurado, senão localStorage ──
+const LKEY = 'psique.conta.pessoas';
+const store = {
+  local: !CONFIGURED,
+  async list(){
+    if(this.local){ return JSON.parse(localStorage.getItem(LKEY)||'[]').sort((a,b)=>(b.updated_at||'').localeCompare(a.updated_at||'')); }
+    const { data, error } = await sb.from('profiles').select('*').order('updated_at',{ascending:false});
+    if(error){ console.warn(error); return []; }
+    return data;
+  },
+  async create(p){
+    if(this.local){
+      const arr = JSON.parse(localStorage.getItem(LKEY)||'[]');
+      const row = { id:'loc_'+Math.random().toString(36).slice(2,10), name:p.name, notes:p.notes||'', config:null, answers:null,
+        invite_token:p.invite_token||null, status:p.status||'ready',
+        created_at:new Date().toISOString(), updated_at:new Date().toISOString() };
+      arr.push(row); localStorage.setItem(LKEY, JSON.stringify(arr)); return row;
+    }
+    const { data, error } = await sb.from('profiles')
+      .insert({ user_id:user.id, name:p.name, notes:p.notes||'', relationship:'pessoa', invite_token:p.invite_token||null, status:p.status||'ready' }).select().single();
+    if(error) throw error; return data;
+  },
+  async update(id, patch){
+    if(this.local){
+      const arr = JSON.parse(localStorage.getItem(LKEY)||'[]');
+      const i = arr.findIndex(x=>x.id===id); if(i<0) return;
+      arr[i] = { ...arr[i], ...patch, updated_at:new Date().toISOString() };
+      localStorage.setItem(LKEY, JSON.stringify(arr)); return arr[i];
+    }
+    const { error } = await sb.from('profiles').update(patch).eq('id', id);
+    if(error) throw error;
+  },
+  async remove(id){
+    if(this.local){
+      const arr = JSON.parse(localStorage.getItem(LKEY)||'[]').filter(x=>x.id!==id);
+      localStorage.setItem(LKEY, JSON.stringify(arr)); return;
+    }
+    const { error } = await sb.from('profiles').delete().eq('id', id);
+    if(error) throw error;
+  },
+  async get(id){ return (await this.list()).find(x=>x.id===id); }
+};
+
+// ── Auth ──
+async function boot(){
+  if(store.local){
+    document.body.insertAdjacentHTML('beforeend',
+      '<div class="local-banner">Modo local — os dados ficam só neste dispositivo. Configure o Supabase para sincronizar e usar o login.</div>');
+    user = { id:'local', email:'este dispositivo' };
+    enterApp();
+    return;
+  }
+  const { data:{ session } } = await sb.auth.getSession();
+  if(session){ user = session.user; enterApp(); }
+  else showAuth();
+
+  sb.auth.onAuthStateChange((event, session)=>{
+    if(event==='SIGNED_IN' && session){ user = session.user; enterApp(); }
+    if(event==='SIGNED_OUT'){ user = null; showAuth(); }
+  });
+}
+
+function showAuth(){ $('#app').classList.add('hide'); $('#patient').classList.add('hide'); $('#auth').classList.remove('hide'); }
+function enterApp(){
+  $('#auth').classList.add('hide'); $('#app').classList.remove('hide');
+  $('#whoEmail').textContent = user.email || '';
+  if(store.local) $('#whoEmail').textContent = 'modo local';
+  renderCatalog();
+}
+
+function setMode(m){
+  mode = m;
+  $('#authTitle').textContent = m==='signup' ? 'Criar conta' : 'Entrar';
+  $('#nameField').classList.toggle('hide', m!=='signup');
+  $('#emailBtn').textContent = m==='signup' ? 'Criar conta' : 'Entrar';
+  $('#switchPrompt').textContent = m==='signup' ? 'Já tem conta?' : 'Novo por aqui?';
+  $('#switchBtn').textContent = m==='signup' ? 'Entrar' : 'Criar conta';
+  $('#pass').setAttribute('autocomplete', m==='signup'?'new-password':'current-password');
+  $('#authErr').textContent = '';
+}
+$('#switchBtn').onclick = () => setMode(mode==='signup'?'login':'signup');
+
+$('#googleBtn').onclick = async () => {
+  if(store.local){ $('#authErr').textContent='Configure o Supabase para usar o Google.'; return; }
+  const redirect = location.origin + location.pathname;
+  await sb.auth.signInWithOAuth({ provider:'google', options:{ redirectTo:redirect } });
+};
+
+$('#emailBtn').onclick = async () => {
+  const email = $('#email').value.trim(), pass = $('#pass').value, err = $('#authErr');
+  if(store.local){ err.textContent='Configure o Supabase para usar o login.'; return; }
+  if(!email || !pass){ err.textContent='Preencha e-mail e senha.'; return; }
+  if(mode==='signup' && pass.length<6){ err.textContent='A senha precisa de ao menos 6 caracteres.'; return; }
+  const btn = $('#emailBtn'); btn.disabled=true; const prev=btn.textContent; btn.textContent='…'; err.textContent='';
+  try{
+    if(mode==='signup'){
+      const name = $('#regName').value.trim();
+      const { data, error } = await sb.auth.signUp({ email, password:pass, options:{ data:{ name } } });
+      if(error) throw error;
+      if(!data.session) err.textContent='Conta criada. Confirme pelo e-mail e depois entre.';
+    } else {
+      const { error } = await sb.auth.signInWithPassword({ email, password:pass });
+      if(error) throw error;
+    }
+  }catch(e){ err.textContent = mode==='signup' ? ('Não foi possível criar: '+e.message) : 'Credenciais inválidas.'; }
+  btn.disabled=false; btn.textContent=prev;
+};
+
+$('#signOutBtn').onclick = async () => {
+  if(store.local){ return; }
+  await sb.auth.signOut();
+};
+
+// ── Catálogo ──
+function superiorOf(cfg){
+  if(!cfg || !cfg.slots) return null;
+  return Object.keys(cfg.slots).find(fn => cfg.slots[fn]==='topC') || null;
+}
+function seal(cfg){
+  const sup = superiorOf(cfg);
+  if(!sup) return '<svg class="seal" viewBox="0 0 46 46"><circle cx="23" cy="23" r="21" fill="none" stroke="var(--ink-faint)" stroke-width="1" stroke-dasharray="3 4"/><circle cx="23" cy="23" r="3" fill="var(--ink-faint)"/></svg>';
+  const order=['sentimento','sensacao','pensamento','intuicao'];
+  let secs='';
+  order.forEach((fn,i)=>{ const a0=(i/4)*2*Math.PI-Math.PI/2, a1=((i+1)/4)*2*Math.PI-Math.PI/2;
+    const x0=23+18*Math.cos(a0),y0=23+18*Math.sin(a0),x1=23+18*Math.cos(a1),y1=23+18*Math.sin(a1);
+    secs+='<path d="M23 23 L'+x0.toFixed(1)+' '+y0.toFixed(1)+' A18 18 0 0 1 '+x1.toFixed(1)+' '+y1.toFixed(1)+' Z" fill="'+FN[fn]+'" opacity="'+(fn===sup?'0.95':'0.32')+'"/>'; });
+  return '<svg class="seal" viewBox="0 0 46 46">'+secs+'<circle cx="23" cy="23" r="6" fill="var(--paper)"/><circle cx="23" cy="23" r="2.4" fill="var(--ink)"/></svg>';
+}
+function fmtDate(s){ if(!s) return ''; const d=new Date(s); return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'}); }
+
+async function renderCatalog(){
+  const list = await store.list();
+  $('#catCount').textContent = list.length ? (list.length+' '+(list.length===1?'pessoa':'pessoas')) : 'nenhuma pessoa ainda';
+  const grid = $('#grid');
+  if(!list.length){
+    grid.innerHTML = '<div class="empty"><span class="serif">Comece pela primeira pessoa.</span>Adicione alguém e aplique o questionário para revelar a psique — ou envie um link para a pessoa preencher. Depois é só abrir para explorar.</div>';
+    return;
+  }
+  grid.innerHTML = list.map(p=>{
+    const sup = superiorOf(p.config);
+    const pending = !p.config && p.invite_token;
+    const meta = sup ? ('superior · '+FN_LABEL[sup]) : (pending ? 'aguardando preenchimento' : 'sem avaliação');
+    const action = pending
+      ? '<button class="copylink" data-link="'+p.invite_token+'">copiar link</button>'
+      : '<span class="pmeta" style="color:var(--ink-faint)">abrir →</span>';
+    return '<div class="pcard'+(pending?' pending':'')+'" data-id="'+p.id+'">'
+      +'<div class="prow">'+seal(p.config)+'<span class="pmeta">'+fmtDate(p.updated_at)+'</span></div>'
+      +'<div><div class="pname">'+escapeHtml(p.name)+'</div><div class="pmeta">'+meta+'</div></div>'
+      +'<div class="prow" style="margin-top:auto">'+action
+      +'<button class="del" data-del="'+p.id+'">excluir</button></div></div>';
+  }).join('');
+  grid.querySelectorAll('.pcard').forEach(c=>{
+    c.onclick = e => {
+      if(e.target.closest('[data-del]')) return;
+      const link = e.target.closest('[data-link]');
+      if(link){ copyInvite(link.dataset.link); return; }
+      openPatient(c.dataset.id);
+    };
+  });
+  grid.querySelectorAll('[data-del]').forEach(b=>{
+    b.onclick = async e => { e.stopPropagation();
+      const p = await store.get(b.dataset.del);
+      if(confirm('Excluir '+(p?p.name:'')+'? Esta ação não pode ser desfeita.')){ await store.remove(b.dataset.del); renderCatalog(); }
+    };
+  });
+}
+function escapeHtml(s){ return (s||'').replace(/[&<>"]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
+
+// ── Nova pessoa ──
+$('#newBtn').onclick = () => { $('#mName').value=''; $('#mNotes').value=''; $('#mErr').textContent=''; $('#modal').classList.remove('hide'); setTimeout(()=>$('#mName').focus(),50); };
+$('#mCancel').onclick = () => $('#modal').classList.add('hide');
+$('#mCreate').onclick = async () => {
+  const name = $('#mName').value.trim();
+  if(!name){ $('#mErr').textContent='Dê um nome ou iniciais.'; return; }
+  try{
+    const p = await store.create({ name, notes:$('#mNotes').value.trim() });
+    $('#modal').classList.add('hide');
+    startOnboarding(p.id, p.name);
+  }catch(e){ $('#mErr').textContent='Não foi possível criar: '+e.message; }
+};
+
+// ── Convidar por link ──
+function inviteLink(token){ return new URL('../onboarding/onboarding.html?c='+token, location.href).href; }
+async function copyInvite(token){
+  const url = inviteLink(token);
+  try{ await navigator.clipboard.writeText(url); toast('Link copiado'); }
+  catch(e){ prompt('Copie o link:', url); }
+}
+let toastT=null;
+function toast(msg){
+  let el=$('#toast'); if(!el){ el=document.createElement('div'); el.id='toast';
+    el.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:80;background:var(--ink);color:var(--paper);font-size:12px;letter-spacing:0.08em;padding:10px 18px;border-radius:4px';
+    document.body.appendChild(el); }
+  el.textContent=msg; el.style.opacity='1'; clearTimeout(toastT); toastT=setTimeout(()=>el.style.opacity='0',1600);
+}
+$('#inviteBtn').onclick = () => { $('#lName').value=''; $('#lErr').textContent=''; $('#linkOut').classList.add('hide'); $('#lCreate').classList.remove('hide'); $('#linkModal').classList.remove('hide'); setTimeout(()=>$('#lName').focus(),50); };
+$('#lClose').onclick = () => { $('#linkModal').classList.add('hide'); renderCatalog(); };
+$('#lCreate').onclick = async () => {
+  const name = $('#lName').value.trim() || 'Convite';
+  const token = 'inv_' + Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4);
+  try{
+    await store.create({ name, invite_token:token, status:'pending' });
+    const url = inviteLink(token);
+    $('#linkUrl').value = url;
+    $('#linkOut').classList.remove('hide');
+    $('#lCreate').classList.add('hide');
+    $('#linkCopy').onclick = () => copyInvite(token);
+  }catch(e){ $('#lErr').textContent='Não foi possível gerar: '+e.message; }
+};
+
+// ── Onboarding (questionário) para uma pessoa ── roda no iframe da conta
+let assessing = false;
+let activePatientName = '';
+let assessPoll = null;
+function startOnboarding(patientId, name){
+  activePatientId = patientId; activePatientName = name || ''; assessing = true;
+  try{
+    localStorage.removeItem('psique.config');
+    localStorage.removeItem('psique.onboarding.progress');
+    localStorage.removeItem('psique.onboarding.seen');
+  }catch(e){}
+  $('#pvName').textContent = activePatientName + ' · questionário';
+  $('#schemaFrame').src = '../onboarding/onboarding.html?ts='+Date.now();
+  $('#patient').classList.remove('hide');
+  // localStorage é compartilhado com o iframe (mesma origem); fizemos o clear acima,
+  // então o primeiro psique.config que aparecer é este preenchimento. Polling é robusto.
+  clearInterval(assessPoll);
+  assessPoll = setInterval(pollAssessment, 400);
+}
+async function pollAssessment(){
+  if(!assessing || !activePatientId) return;
+  let raw; try{ raw = localStorage.getItem('psique.config'); }catch(e){ return; }
+  if(!raw) return;
+  clearInterval(assessPoll); assessing = false;
+  const cfg = JSON.parse(raw);
+  await store.update(activePatientId, {
+    config:{ attitude:cfg.attitude, slots:cfg.slots, development:cfg.development },
+    instrument_version:cfg.version||null
+  });
+  $('#pvName').textContent = activePatientName;   // onboarding segue para o esquema no iframe
+  renderCatalog();
+}
+
+// ── Abrir pessoa no esquema ──
+async function openPatient(id){
+  const p = await store.get(id); if(!p) return;
+  activePatientId = id; activePatientName = p.name; assessing = false;
+  try{
+    if(p.config) localStorage.setItem('psique.config', JSON.stringify(p.config));
+    else localStorage.removeItem('psique.config');
+    localStorage.setItem('psique.onboarding.seen','done'); // impede o redirect de 1ª abertura
+  }catch(e){}
+  $('#pvName').textContent = p.name;
+  $('#schemaFrame').src = '../PSIQUE.html?ts='+Date.now();
+  $('#patient').classList.remove('hide');
+}
+$('#pvBack').onclick = () => { clearInterval(assessPoll); assessing=false; $('#patient').classList.add('hide'); $('#schemaFrame').src='about:blank'; renderCatalog(); };
+$('#pvReassess').onclick = () => { if(activePatientId) startOnboarding(activePatientId, activePatientName); };
+
+setMode('login');
+boot();
+</script>
+</body>
+</html>
