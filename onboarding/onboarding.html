@@ -198,11 +198,12 @@ async function submitInvite(r){
     answers: state.answers, instrument_version: r.version };
   const configured = !/SEU-PROJETO|SUA-ANON/.test(INV_SB_URL + INV_SB_KEY);
   if(configured){
+    // chama a função SQL submit_invite via REST (sem precisar do supabase-js aqui)
     try{
-      await fetch(INV_SB_URL + '/functions/v1/submit-invite', { method:'POST',
-        headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+INV_SB_KEY },
-        body: JSON.stringify(payload) });
-    }catch(e){ console.warn('submit-invite falhou', e); }
+      await fetch(INV_SB_URL + '/rest/v1/rpc/submit_invite', { method:'POST',
+        headers:{ 'Content-Type':'application/json', 'apikey':INV_SB_KEY, 'Authorization':'Bearer '+INV_SB_KEY },
+        body: JSON.stringify({ p_token:INVITE_TOKEN, p_config:payload.config, p_answers:payload.answers, p_version:payload.instrument_version }) });
+    }catch(e){ console.warn('submit_invite falhou', e); }
   } else {
     // modo local (mesmo navegador): grava na biblioteca local pelo token
     try{

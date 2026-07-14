@@ -2,8 +2,8 @@
 -- A Psique · Conta — esquema do banco (rode no SQL Editor do Supabase)
 -- Um registro por pessoa. Dono = a conta (auth.uid()).
 -- Row Level Security garante que cada conta só enxerga as próprias pessoas.
--- Convites por link são gravados por uma Edge Function (service role) —
--- ver conta/submit-invite.ts.
+-- Convites por link são gravados pela função submit_invite (no fim deste
+-- arquivo) — sem terminal, é só rodar tudo aqui no SQL Editor.
 -- ═══════════════════════════════════════════════════════════════
 
 create extension if not exists "pgcrypto";
@@ -53,3 +53,37 @@ create policy "profiles_update_own" on public.profiles
 drop policy if exists "profiles_delete_own" on public.profiles;
 create policy "profiles_delete_own" on public.profiles
   for delete using (auth.uid() = user_id);
+
+-- ═══════════════════════════════════════════════════════════════
+-- Convite por link: função que grava o resultado na conta do DONO do
+-- convite, sem a pessoa precisar estar logada. SECURITY DEFINER roda
+-- com privilégio elevado, mas só toca a linha cujo invite_token bate —
+-- o token é o segredo que autoriza aquela gravação. Substitui a Edge
+-- Function (não precisa de terminal/CLI; roda aqui no SQL Editor).
+-- ═══════════════════════════════════════════════════════════════
+create or replace function public.submit_invite(
+  p_token   text,
+  p_config  jsonb,
+  p_answers jsonb default null,
+  p_version text default null
+) returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  update public.profiles
+     set config = p_config,
+         answers = coalesce(p_answers, answers),
+         instrument_version = coalesce(p_version, instrument_version),
+         status = 'ready',
+         updated_at = now()
+   where invite_token = p_token;
+  if not found then
+    raise exception 'invite token inválido';
+  end if;
+end;
+$$;
+
+-- deixa o convidado anônimo chamar a função (só ela; não a tabela)
+grant execute on function public.submit_invite(text, jsonb, jsonb, text) to anon;
