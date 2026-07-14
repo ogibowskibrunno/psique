@@ -107,7 +107,20 @@
   .pv-actions{display:flex;gap:8px}
   .pv-actions button{background:none;border:1px solid var(--line);color:var(--ink-soft);font:inherit;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;padding:8px 12px;cursor:pointer;border-radius:3px;transition:all 140ms}
   .pv-actions button:hover{border-color:var(--ink);color:var(--ink)}
+  .pv-actions button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
   #schemaFrame{flex:1;border:none;width:100%}
+  /* ── Painel de descrição (o texto do fim do questionário) ── */
+  .desc-panel{background:var(--card);border-bottom:1px solid var(--line);
+    padding:20px clamp(18px,4vw,40px);max-height:44vh;overflow:auto}
+  .desc-panel.hide{display:none}
+  .desc-panel .d-att{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-weight:500;font-size:clamp(22px,4vw,28px);margin-bottom:14px}
+  .desc-panel .d-line{font-size:clamp(15px,3.4vw,17px);line-height:1.5;margin-top:12px}
+  .desc-panel .d-label{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--ink-soft)}
+  .desc-panel .d-fn{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-weight:600}
+  .desc-panel .swatch{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px}
+  .desc-panel .d-note{margin-top:16px;font-size:12.5px;font-style:italic;color:var(--ink-soft);line-height:1.5}
+  .desc-panel .d-empty{color:var(--ink-soft);font-size:14px;line-height:1.6}
+  .desc-panel .d-empty .serif{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;color:var(--ink);font-size:22px;display:block;margin-bottom:6px}
 
   /* ── Modal ── */
   .modal-bg{position:fixed;inset:0;z-index:70;background:rgba(30,15,8,0.4);display:grid;place-items:center;padding:22px}
@@ -191,9 +204,11 @@
     <button class="back" id="pvBack">← pessoas</button>
     <div class="pv-name" id="pvName"></div>
     <div class="pv-actions">
+      <button id="descToggle" aria-pressed="true">Descrição</button>
       <button id="pvReassess">Questionário</button>
     </div>
   </div>
+  <div id="descPanel" class="desc-panel"></div>
   <iframe id="schemaFrame" title="Esquema da psique"></iframe>
 </div>
 
@@ -458,11 +473,40 @@ async function openPatient(id){
     localStorage.setItem('psique.onboarding.seen','done'); // impede o redirect de 1ª abertura
   }catch(e){}
   $('#pvName').textContent = p.name;
+  $('#descPanel').innerHTML = descHtml(p.config);
+  showDesc(true);
   $('#schemaFrame').src = '../PSIQUE.html?ts='+Date.now();
   $('#patient').classList.remove('hide');
 }
 $('#pvBack').onclick = () => { clearInterval(assessPoll); assessing=false; $('#patient').classList.add('hide'); $('#schemaFrame').src='about:blank'; renderCatalog(); };
 $('#pvReassess').onclick = () => { if(activePatientId) startOnboarding(activePatientId, activePatientName); };
+
+// ── Descrição interpretativa (o texto do fim do questionário), a partir da config ──
+function showDesc(on){ $('#descPanel').classList.toggle('hide', !on); $('#descToggle').setAttribute('aria-pressed', on ? 'true':'false'); }
+$('#descToggle').onclick = () => showDesc($('#descPanel').classList.contains('hide'));
+function descHtml(cfg){
+  if(!cfg || !cfg.slots){
+    return '<div class="d-empty"><span class="serif">Sem avaliação ainda.</span>Aplique o questionário (ou envie um link) para revelar a psique desta pessoa.</div>';
+  }
+  const slotFn = {}; for(const f in cfg.slots) slotFn[cfg.slots[f]] = f;
+  const superior = slotFn['topC'], inferior = slotFn['bottom'];
+  const lat = Object.keys(cfg.slots).filter(f => f!==superior && f!==inferior);
+  const auxRight = lat.find(f => cfg.slots[f].endsWith('R'));
+  const auxLeft  = lat.find(f => cfg.slots[f].endsWith('L'));
+  const attWord = cfg.attitude==='I' ? 'introvertida' : 'extrovertida';
+  const fn = f => '<span class="d-fn" style="color:'+FN[f]+'"><span class="swatch" style="background:'+FN[f]+'"></span>'+FN_LABEL[f]+'</span>';
+  const auxTop = [auxRight,auxLeft].filter(f => cfg.slots[f].startsWith('top'));
+  const auxBot = [auxRight,auxLeft].filter(f => cfg.slots[f].startsWith('bot'));
+  const auxLine = (auxTop.length && auxBot.length)
+    ? auxTop.map(fn).join(' e ')+' desenvolvida'+(auxTop.length>1?'s':'')+' na consciência; '+auxBot.map(fn).join(' e ')+' ainda em trânsito para o inconsciente.'
+    : auxTop.length===2 ? auxTop.map(fn).join(' e ')+' ambas presentes na consciência.'
+    : auxBot.map(fn).join(' e ')+' ainda mergulhadas no inconsciente.';
+  return '<div class="d-att">Uma disposição '+attWord+'.</div>'
+    +'<div class="d-line"><span class="d-label">função superior</span><br>'+fn(superior)+' conduz a consciência.</div>'
+    +'<div class="d-line"><span class="d-label">auxiliares</span><br>'+auxLine+'</div>'
+    +'<div class="d-line"><span class="d-label">função inferior</span><br>'+fn(inferior)+' permanece a mais distante — a porta para o inconsciente.</div>'
+    +'<div class="d-note">Estimativa a partir do questionário, não um veredito. Ajuste o esquema abaixo como fizer sentido.</div>';
+}
 
 boot();
 </script>
