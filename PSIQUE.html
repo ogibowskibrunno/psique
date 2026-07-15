@@ -832,15 +832,25 @@ shuffleBtnEl.addEventListener('click', () => {
   document.dispatchEvent(new CustomEvent('psique:shuffle'));
 });
 
-// Restaurar a psique descoberta no onboarding (só visível se houver config)
+// Botão "minha psique": se a pessoa já tem uma psique descoberta, restaura;
+// se ainda não fez o questionário, leva para ele. Escondido só quando o
+// esquema roda dentro de outra tela (iframe da Conta) e não há psique.
 const restoreBtnEl = document.getElementById('restoreBtn');
+const IS_TOP = (() => { try { return window.self === window.top; } catch (e) { return false; } })();
+function hasStoredPsique() { try { return !!localStorage.getItem('psique.config'); } catch (e) { return false; } }
 function refreshRestoreVisibility() {
-  let has = false;
-  try { has = !!localStorage.getItem('psique.config'); } catch (e) {}
-  // valor explícito: '' cairia na regra .restore-btn{display:none}
-  restoreBtnEl.style.display = has ? 'inline-block' : 'none';
+  const has = hasStoredPsique();
+  // mostra se há psique (restaurar) ou se estamos no site público (descobrir)
+  restoreBtnEl.style.display = (has || IS_TOP) ? 'inline-block' : 'none';
+  restoreBtnEl.setAttribute('title', has ? 'minha psique' : 'descobrir minha psique');
+  restoreBtnEl.setAttribute('aria-label', has ? 'Restaurar minha psique' : 'Descobrir minha psique');
 }
 restoreBtnEl.addEventListener('click', () => {
+  if (!hasStoredPsique()) {
+    // ainda não fez o teste → vai para o questionário (só no site público)
+    if (IS_TOP) location.href = 'onboarding/onboarding.html';
+    return;
+  }
   if (!applyStoredConfig()) return;
   restoreBtnEl.classList.remove('pulse');
   void restoreBtnEl.offsetWidth;
