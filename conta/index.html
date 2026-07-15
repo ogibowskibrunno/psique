@@ -109,10 +109,11 @@
   .pv-actions button:hover{border-color:var(--ink);color:var(--ink)}
   .pv-actions button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
   #schemaFrame{flex:1;border:none;width:100%}
-  /* ── Painel de descrição (o texto do fim do questionário) ── */
-  .desc-panel{background:var(--card);border-bottom:1px solid var(--line);
-    padding:20px clamp(18px,4vw,40px);max-height:44vh;overflow:auto}
-  .desc-panel.hide{display:none}
+  /* ── Descrição (o texto do fim do questionário) — em popup ── */
+  .desc-modal{position:relative;max-width:440px;max-height:82vh;overflow:auto;padding:30px clamp(22px,4vw,34px)}
+  .desc-close{position:absolute;top:12px;right:14px;background:none;border:none;color:var(--ink-soft);
+    font-size:26px;line-height:1;cursor:pointer;padding:4px 8px;border-radius:4px;transition:color 140ms}
+  .desc-close:hover{color:var(--ink)}
   .desc-panel .d-att{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-weight:500;font-size:clamp(22px,4vw,28px);margin-bottom:14px}
   .desc-panel .d-line{font-size:clamp(15px,3.4vw,17px);line-height:1.5;margin-top:12px}
   .desc-panel .d-label{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--ink-soft)}
@@ -204,12 +205,19 @@
     <button class="back" id="pvBack">← pessoas</button>
     <div class="pv-name" id="pvName"></div>
     <div class="pv-actions">
-      <button id="descToggle" aria-pressed="true">Descrição</button>
+      <button id="descToggle">Descrição</button>
       <button id="pvReassess">Questionário</button>
     </div>
   </div>
-  <div id="descPanel" class="desc-panel"></div>
   <iframe id="schemaFrame" title="Esquema da psique"></iframe>
+</div>
+
+<!-- ═══ MODAL: DESCRIÇÃO ═══ -->
+<div id="descModal" class="modal-bg hide">
+  <div class="modal desc-modal">
+    <button class="desc-close" id="descClose" aria-label="Fechar">×</button>
+    <div id="descPanel" class="desc-panel"></div>
+  </div>
 </div>
 
 <!-- ═══ NEW PATIENT MODAL ═══ -->
@@ -493,16 +501,18 @@ async function openPatient(id){
   }catch(e){}
   $('#pvName').textContent = p.name;
   $('#descPanel').innerHTML = descHtml(p.config);
-  showDesc(true);
+  showDesc(false);
   $('#schemaFrame').src = '../PSIQUE.html?ts='+Date.now();
   $('#patient').classList.remove('hide');
 }
-$('#pvBack').onclick = () => { clearInterval(assessPoll); assessing=false; $('#patient').classList.add('hide'); $('#schemaFrame').src='about:blank'; renderCatalog(); };
+$('#pvBack').onclick = () => { clearInterval(assessPoll); assessing=false; showDesc(false); $('#patient').classList.add('hide'); $('#schemaFrame').src='about:blank'; renderCatalog(); };
 $('#pvReassess').onclick = () => { if(activePatientId) startOnboarding(activePatientId, activePatientName); };
 
-// ── Descrição interpretativa (o texto do fim do questionário), a partir da config ──
-function showDesc(on){ $('#descPanel').classList.toggle('hide', !on); $('#descToggle').setAttribute('aria-pressed', on ? 'true':'false'); }
-$('#descToggle').onclick = () => showDesc($('#descPanel').classList.contains('hide'));
+// ── Descrição interpretativa (o texto do fim do questionário), em popup ──
+function showDesc(on){ $('#descModal').classList.toggle('hide', !on); }
+$('#descToggle').onclick = () => showDesc(true);
+$('#descClose').onclick = () => showDesc(false);
+$('#descModal').onclick = (e) => { if(e.target === $('#descModal')) showDesc(false); };
 function descHtml(cfg){
   if(!cfg || !cfg.slots){
     return '<div class="d-empty"><span class="serif">Sem avaliação ainda.</span>Aplique o questionário (ou envie um link) para revelar a psique desta pessoa.</div>';
@@ -524,7 +534,7 @@ function descHtml(cfg){
     +'<div class="d-line"><span class="d-label">função superior</span><br>'+fn(superior)+' conduz a consciência.</div>'
     +'<div class="d-line"><span class="d-label">auxiliares</span><br>'+auxLine+'</div>'
     +'<div class="d-line"><span class="d-label">função inferior</span><br>'+fn(inferior)+' permanece a mais distante — a porta para o inconsciente.</div>'
-    +'<div class="d-note">Estimativa a partir do questionário, não um veredito. Ajuste o esquema abaixo como fizer sentido.</div>';
+    +'<div class="d-note">Estimativa a partir do questionário, não um veredito. Feche este texto e ajuste o esquema como fizer sentido.</div>';
 }
 
 boot();
