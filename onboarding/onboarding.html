@@ -189,6 +189,11 @@ const state = {
 // quem enviou o link. O resultado é enviado para lá (Edge Function no modo
 // real; biblioteca local no mesmo navegador para teste). Sem ?c, nada muda. ──
 const INVITE_TOKEN = new URLSearchParams(location.search).get('c');
+// Site público standalone (não é iframe da Conta, nem convite): ao terminar,
+// a análise e o esquema ficam atrás de um login. Dentro da Conta ou num
+// convite, o resultado aparece normalmente.
+const IS_TOP = (() => { try { return window.self === window.top; } catch (e) { return false; } })();
+const GATE = IS_TOP && !INVITE_TOKEN;
 const INV_SB_URL = 'https://oedmlabaxdphbzypqevp.supabase.co';   // mesmos valores do conta/index.html
 const INV_SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9lZG1sYWJheGRwaGJ6eXBxZXZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NTE5ODYsImV4cCI6MjA5OTUyNzk4Nn0.jqDkDkNt_BOTnhanXFd2KwPDMRTkmSbyC8DHFRUrofM';
 async function submitInvite(r){
@@ -388,6 +393,35 @@ function renderResult() {
       ? `${auxTop.map(fn).join(' e ')} ambas presentes na consciência.`
       : `${auxBot.map(fn).join(' e ')} ainda mergulhadas no inconsciente.`;
 
+  const cfg = { version:r.version, attitude:r.attitude, slots:r.slots, development:r.development, ts:Date.now() };
+  try {
+    localStorage.setItem('psique.onboarding.seen', 'done');
+    localStorage.removeItem('psique.onboarding.progress');
+  } catch (e) {}
+  // convite: envia o resultado para a conta de quem compartilhou o link
+  submitInvite(r);
+
+  if (GATE) {
+    // Site público: análise e esquema ficam atrás do login. Guarda o
+    // resultado numa chave separada (pendingResult) — NÃO em psique.config —
+    // para o esquema não ficar visível sem login. A Conta reivindica ao entrar.
+    try { localStorage.setItem('psique.pendingResult', JSON.stringify(cfg)); localStorage.removeItem('psique.config'); } catch (e) {}
+    fresh(`
+      <div class="kicker">Seu resultado está pronto</div>
+      <div class="prompt" style="margin-bottom:20px">Sua psique foi mapeada.</div>
+      <p class="lead muted">Entre com sua conta Google para ver sua <em>análise completa</em> e sua psique em movimento — guardada na sua conta, sem senha.</p>
+      <div class="btn-row">
+        <button class="btn" id="enter">Entrar e ver minha psique</button>
+        <button class="btn" id="redo" style="border:none;padding-left:6px">refazer</button>
+      </div>
+    `);
+    document.getElementById('enter').onclick = () => { window.location.href = '../conta/index.html'; };
+    document.getElementById('redo').onclick = () => { state.step='intro1'; state.qi=0; state.answers={}; state.optionOrder={}; persist(); render(); };
+    return;
+  }
+
+  // Dentro da Conta (iframe) ou num convite: libera o esquema e mostra a análise.
+  try { localStorage.setItem('psique.config', JSON.stringify(cfg)); } catch (e) {}
   fresh(`
     <div class="kicker">Sua psique · estimativa</div>
     <div class="prompt" style="margin-bottom:24px">Uma disposição <em>${attWord}</em>.</div>
@@ -401,15 +435,6 @@ function renderResult() {
     </div>
     ${tb ? `<p class="disclaimer" style="opacity:0.7">· dois sinais ficaram próximos; uma pergunta extra afinaria o resultado (${tb}).</p>` : ''}
   `);
-  // salva a configuração para o esquema consumir
-  try {
-    localStorage.setItem('psique.config', JSON.stringify({ version:r.version, attitude:r.attitude, slots:r.slots, development:r.development, ts:Date.now() }));
-    localStorage.setItem('psique.onboarding.seen', 'done');
-    localStorage.removeItem('psique.onboarding.progress');
-  } catch (e) {}
-  // convite: envia o resultado para a conta de quem compartilhou o link
-  submitInvite(r);
-  // '../index.html' funciona no site (redireciona ao PSIQUE.html) e no app (é o esquema)
   document.getElementById('see').onclick = () => { window.location.href = '../index.html'; };
   document.getElementById('redo').onclick = () => { state.step='intro1'; state.qi=0; state.answers={}; state.optionOrder={}; persist(); render(); };
 }

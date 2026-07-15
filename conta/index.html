@@ -314,11 +314,30 @@ async function boot(){
 }
 
 function showAuth(){ $('#app').classList.add('hide'); $('#patient').classList.add('hide'); $('#auth').classList.remove('hide'); }
-function enterApp(){
+async function enterApp(){
   $('#auth').classList.add('hide'); $('#app').classList.remove('hide');
-  $('#whoEmail').textContent = user.email || '';
-  if(store.local) $('#whoEmail').textContent = 'modo local';
-  renderCatalog();
+  $('#whoEmail').textContent = store.local ? 'modo local' : (user.email || '');
+  await renderCatalog();
+  // veio do questionário público → salva a psique da própria pessoa e abre
+  const claimedId = await claimSelfResult();
+  if (claimedId) openPatient(claimedId);
+}
+
+// Reivindica o resultado recém-preenchido no site público como a psique
+// da pessoa logada (cria a primeira "pessoa": ela mesma).
+async function claimSelfResult(){
+  let raw;
+  try { raw = localStorage.getItem('psique.pendingResult'); } catch(e){ return null; }
+  if(!raw) return null;
+  try { localStorage.removeItem('psique.pendingResult'); } catch(e){}
+  let cfg; try { cfg = JSON.parse(raw); } catch(e){ return null; }
+  const meta = (user && user.user_metadata) || {};
+  const name = meta.full_name || meta.name || 'Minha psique';
+  try {
+    const p = await store.create({ name });
+    await store.update(p.id, { config:{ attitude:cfg.attitude, slots:cfg.slots, development:cfg.development }, instrument_version:cfg.version||null });
+    return p.id;
+  } catch(e){ console.warn('claimSelfResult falhou', e); return null; }
 }
 
 $('#googleBtn').onclick = async () => {
